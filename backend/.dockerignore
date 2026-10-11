@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.env
+coverage
+*.md
+!README.md
+.vscode
+.idea
+postgres-data
+redis-data
+.gitignore

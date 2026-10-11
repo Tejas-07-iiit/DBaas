@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlatformRole {
+  USER
+  ADMIN
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+}
+
+enum DatabaseType {
+  POSTGRESQL
+  MONGODB
+  QDRANT
+  NEO4J
+}
+
+enum DatabaseStatus {
+  REQUESTED
+  PENDING
+  PROVISIONING
+  RUNNING
+  STOPPING
+  STOPPED
+  STARTING
+  RESTARTING
+  ERROR
+  DELETING
+  DELETED
+}
+
+enum DatabaseEventType {
+  CREATED
+  STARTED
+  STOPPED
+  RESTARTED
+  DELETED
+  ERROR
+  BACKUP_CREATED
+  BACKUP_RESTORED
+  CREDENTIALS_ROTATED
+  CONFIGURATION_CHANGED
+  SCALED
+  STATUS_CHANGED
+  DELETION_REQUESTED
+  PROVISIONING_REQUESTED
+}
+
+model User {
+  id          String       @id @default(uuid()) @db.Uuid
+  firebaseUid String       @unique @map("firebase_uid")
+  email       String       @unique
+  name        String?
+  avatarUrl   String?      @map("avatar_url")
+  role        PlatformRole @default(USER)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  ownedProjects  Project[]       @relation("ProjectOwner")
+  projectMembers ProjectMember[]
+  auditLogs      AuditLog[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  ownerId     String   @map("owner_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner         User               @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members       ProjectMember[]
+  subscription  Subscription?
+  databases     DatabaseInstance[]
+  auditLogs     AuditLog[]
+
+  @@index([ownerId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(uuid()) @db.Uuid
+  role      ProjectRole @default(MEMBER)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  userId    String  @map("user_id") @db.Uuid
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model Subscription {
+  id              String             @id @default(uuid()) @db.Uuid
+  tier            SubscriptionTier   @default(FREE)
+  status          SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId    String?        @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?       @unique @map("stripe_subscription_id")
+  currentPeriodStart   DateTime?     @map("current_period_start")
+  currentPeriodEnd     DateTime?     @map("current_period_end")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  projectId String  @unique @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model DatabaseInstance {
+  id              String         @id @default(uuid()) @db.Uuid
+  name            String
+  type            DatabaseType
+  status          DatabaseStatus @default(REQUESTED)
+  version         String?
+  host            String?
+  port            Int?
+  cpuCores        Int            @default(1) @map("cpu_cores")
+  ramMb           Int            @default(1024) @map("ram_mb")
+  storageMb       Int            @default(5120) @map("storage_mb")
+  internalIp      String?        @map("internal_ip")
+  internalNetwork String?        @map("internal_network")
+  vmId            String?        @map("vm_id")
+  failureReason   String?        @map("failure_reason")
+  deletedAt       DateTime?      @map("deleted_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  projectId     String         @map("project_id") @db.Uuid
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  credentials   DatabaseCredential[]
+  events        DatabaseEvent[]
+
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@index([projectId, status])
+  @@map("database_instances")
+}
+
+model DatabaseCredential {
+  id              String   @id @default(uuid()) @db.Uuid
+  username        String
+  encryptedPassword String @map("encrypted_password")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  databaseId      String   @map("database_id") @db.Uuid
+  database        DatabaseInstance @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  @@index([databaseId])
+  @@map("database_credentials")
+}
+
+model DatabaseEvent {
+  id              String            @id @default(uuid()) @db.Uuid
+  type            DatabaseEventType
+  message         String?
+  previousStatus  DatabaseStatus?   @map("previous_status")
+  newStatus       DatabaseStatus?   @map("new_status")
+  metadata        Json?
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  databaseId  String            @map("database_id") @db.Uuid
+  database    DatabaseInstance   @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  @@index([databaseId])
+  @@index([createdAt])
+  @@map("database_events")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  action      String
+  resource    String
+  resourceId  String?  @map("resource_id")
+  metadata    Json?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userId      String?  @map("user_id") @db.Uuid
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  projectId   String?  @map("project_id") @db.Uuid
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
