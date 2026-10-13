@@ -1,0 +1,7 @@
+export function Container({ className = "", children, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div className={`mx-auto w-full max-w-7xl px-6 lg:px-8 ${className}`} {...props}>
+      {children}
+    </div>
+  );
+}

@@ -1,0 +1,109 @@
+/* ============================================================
+   DBAAS — GLOBAL STYLES
+   ============================================================ */
+
+/* Fonts MUST come first before any rules */
+@import "tailwindcss";
+
+:root {
+  --bg:        #05080F;
+  --surface:   #0C121D;
+  --surface-2: #131B2A;
+  --border:    rgba(130, 160, 200, 0.16);
+  --border-bright: rgba(130, 160, 200, 0.32);
+  --text:      #E6EDF7;
+  --muted:     #8A97AB;
+  --accent:    #19E3C1;
+  --accent-glow: rgba(25, 227, 193, 0.18);
+  --highlight: #FFB224;
+  --mongo:    #3FCF6D;
+  --postgres: #4C8DFF;
+  --qdrant:   #FF4D8D;
+  /* Fonts come from next/font, these are overridden below */
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body:    system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  /* Connect next/font variables */
+  --font-heading: var(--loaded-heading, 'Space Grotesk', sans-serif);
+  --font-mono:    var(--loaded-mono, 'JetBrains Mono', monospace);
+  --nav-h: 68px;
+}
+
+@theme inline {
+  --color-bg:        var(--bg);
+  --color-surface:   var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border:    var(--border);
+  --color-text:      var(--text);
+  --color-muted:     var(--muted);
+  --color-accent:    var(--accent);
+  --color-highlight: var(--highlight);
+  --color-mongo:     var(--mongo);
+  --color-postgres:  var(--postgres);
+  --color-qdrant:    var(--qdrant);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+  
+  --animate-marquee: marquee 40s linear infinite;
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-50% - 1.5rem)); }
+  }
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { color-scheme: dark; scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 3px; }
+
+::selection { background: var(--accent-glow); color: var(--accent); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.font-heading { font-family: var(--font-heading); }
+.font-mono    { font-family: var(--font-mono); }
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px;
+}
+
+.glow-accent { box-shadow: 0 0 20px var(--accent-glow), 0 0 40px rgba(25, 227, 193, 0.08); }
+.border-line { border: 1px solid var(--border); }
+
+.container-site { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: 1.25rem; }
+@media (min-width: 768px) { .container-site { padding-inline: 2rem; } }
+
+.scroll-locked { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
