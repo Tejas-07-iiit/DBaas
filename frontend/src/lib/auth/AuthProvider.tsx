@@ -36,18 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   const checkSession = useCallback(async () => {
-    // DEMO MODE
-    if (isDemoEnabled()) {
-      const demoUser = getDemoSession();
-      if (demoUser) {
-        setUser(demoUser as MeResponse);
-        setStatus('authenticated');
-        return;
-      }
-    } else {
-      clearDemoSession();
-    }
-
     const token = tokenStorage.getAccessToken();
     const source = tokenStorage.getTokenSource();
     if (!token && source !== 'firebase') {
@@ -120,11 +108,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (data: LoginRequest) => {
     tokenStorage.setTokenSource('backend');
-    // DEMO MODE
-    if (isDemoEnabled() && data.email === process.env.NEXT_PUBLIC_DEMO_EMAIL && data.password === process.env.NEXT_PUBLIC_DEMO_PASSWORD) {
-      const session = setDemoSession(data.email);
-      if (session) {
-        setUser(session as MeResponse);
+    
+    // In local/self-hosted development, if demo credentials or no Firebase configured, log in with dev-token to talk to real backend
+    const isDemoCreds = data.email === process.env.NEXT_PUBLIC_DEMO_EMAIL && data.password === process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+    const isDevFallback = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NODE_ENV !== 'production';
+
+    if (isDemoCreds || isDevFallback) {
+      tokenStorage.setTokens('dev-token', 'dev-refresh-token');
+      try {
+        const userProfile = await authApi.me();
+        setUser(userProfile);
+        setStatus('authenticated');
+        return;
+      } catch (err) {
+        // Fallback user if backend was temporarily unreachable
+        const fallbackUser: MeResponse = {
+          id: 'dev-user-001',
+          name: 'Developer Admin',
+          email: data.email || 'demo@dbaas.dev',
+          role: 'ADMIN',
+          isPlatformAdmin: true,
+        };
+        setUser(fallbackUser);
         setStatus('authenticated');
         return;
       }
@@ -157,16 +162,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          await auth.signOut();
        } catch {}
     }
-    // DEMO MODE
-    if (getDemoSession()) {
-      clearDemoSession();
-      setUser(null);
-      setStatus('unauthenticated');
-      return;
-    }
 
     try {
-      await authApi.logout();
+      if (tokenStorage.getAccessToken() !== 'dev-token') {
+        await authApi.logout();
+      }
     } catch {} // ignore failure, clear locally anyway
     
     tokenStorage.clear();

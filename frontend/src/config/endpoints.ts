@@ -55,6 +55,10 @@ export const endpoints = {
     restart: { path: env.DATABASES_RESTART_ENDPOINT as string, method: 'POST' } as Endpoint, // DB-08
     connection: { path: env.DATABASES_CONNECTION_ENDPOINT as string, method: 'GET' } as Endpoint, // DB-09
     rotateCredentials: { path: env.DATABASES_ROTATE_CREDENTIALS_ENDPOINT as string, method: 'POST' } as Endpoint, // DB-10
+    explorer: { path: '/projects/:projectId/databases/:databaseId/explorer', method: 'GET' } as Endpoint,
+    documents: { path: '/projects/:projectId/databases/:databaseId/explorer/documents', method: 'GET' } as Endpoint,
+    insertDocument: { path: '/projects/:projectId/databases/:databaseId/explorer/documents', method: 'POST' } as Endpoint,
+    databaseUsers: { path: '/projects/:projectId/databases/:databaseId/database-users', method: 'GET' } as Endpoint,
   },
   monitoring: {
     metrics: { path: env.MONITORING_METRICS_ENDPOINT as string, method: 'GET' } as Endpoint, // MON-01

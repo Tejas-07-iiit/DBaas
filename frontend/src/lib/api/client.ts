@@ -64,27 +64,6 @@ export async function apiClient<T>(
   isRetry = false
 ): Promise<T> {
   const url = getEndpointUrl(endpoint, params);
-  
-  // DEMO MODE HOOK
-  if (getDemoSession() && process.env.NODE_ENV !== "production") {
-    const { handleDemoRequest } = await import('@/lib/demo/server');
-    let bodyObj = undefined;
-    if (options.body) {
-      try { bodyObj = JSON.parse(options.body as string); } catch(e) {}
-    }
-    const demoRes = await handleDemoRequest({ 
-      method: endpoint.method, 
-      path: url.replace(env.API_BASE_URL as string, ''), 
-      body: bodyObj 
-    });
-    
-    if (demoRes.status >= 400) {
-      if (demoRes.status === 401) throw ApiError.fromStatus(401, demoRes.body);
-      throw ApiError.fromStatus(demoRes.status, demoRes.body);
-    }
-    if (demoRes.status === 204) return {} as T;
-    return demoRes.body as T;
-  }
 
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
@@ -99,8 +78,8 @@ export async function apiClient<T>(
        }
      } catch {}
   }
-  // DEMO MODE
-  if (token && !getDemoSession()) {
+  
+  if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
@@ -115,8 +94,6 @@ export async function apiClient<T>(
   try {
     res = await fetch(url, reqOptions);
   } catch (err) {
-    // DEMO MODE
-    if (getDemoSession()) throw ApiError.fromStatus(0);
     throw ApiError.fromStatus(0);
   }
 
@@ -128,11 +105,6 @@ export async function apiClient<T>(
   ].includes(endpoint.path);
   
   if (res.status === 401 && !isAuthEndpoint && !isRetry) {
-    // DEMO MODE
-    if (getDemoSession()) {
-      throw ApiError.fromStatus(401);
-    }
-
     if (!refreshPromise) {
       refreshPromise = executeRefresh().finally(() => { refreshPromise = null; });
     }

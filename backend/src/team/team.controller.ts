@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Body,
   Param,
@@ -50,6 +51,7 @@ export class TeamController {
     return this.teamService.addMember(firebaseUser, params.projectId, dto);
   }
 
+  @Put(':userId')
   @Patch(':userId')
   async updateMemberRole(
     @CurrentUser() firebaseUser: FirebaseUser,

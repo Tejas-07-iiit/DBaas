@@ -10,6 +10,8 @@ import { DatabaseEnginesModule } from './database-engines/database-engines.modul
 import { DatabasesModule } from './databases/databases.module';
 import { HealthModule } from './health/health.module';
 import { BullModule } from './bull/bull.module';
+import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { CommonModule } from './common/common.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
@@ -20,6 +22,8 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
       cache: true,
     }),
     PrismaModule,
+    CommonModule,
+    InfrastructureModule,
     AuthModule,
     UsersModule,
     ProjectsModule,

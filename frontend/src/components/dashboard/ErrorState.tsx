@@ -6,6 +6,7 @@
  */
 
 import { ApiError } from "@/lib/api/errors";
+import { AlertCircle } from "lucide-react";
 
 interface ErrorStateProps {
   message?: string;
@@ -30,12 +31,12 @@ export function ErrorState({ message, error, onRetry }: ErrorStateProps) {
   }
 
   return (
-    <div className="p-8 text-center border border-border/50 rounded-xl bg-surface/30">
-      <div className="text-red-400 mb-2 font-bold">Error</div>
-      <p className="text-text mb-1">{message || 'Something went wrong.'}</p>
-      {reason && <p className="text-muted text-sm mb-4">{reason}</p>}
-      {debug && <p className="text-xs font-mono text-muted/50 mb-4">{debug}</p>}
-      {onRetry && <button onClick={onRetry} className="text-accent hover:underline text-sm font-medium">Try again</button>}
+    <div className="py-12 px-8 text-center border border-border/50 rounded-lg bg-surface/20">
+      <AlertCircle size={36} className="text-red-400/60 mx-auto mb-3" strokeWidth={1.5} />
+      <div className="text-sm font-semibold text-red-400 mb-1">{message || 'Something went wrong.'}</div>
+      {reason && <p className="text-muted text-xs mb-4 max-w-md mx-auto">{reason}</p>}
+      {debug && <p className="text-xs font-mono text-muted/40 mb-4">{debug}</p>}
+      {onRetry && <button onClick={onRetry} className="text-accent hover:underline text-xs font-medium">Try again</button>}
     </div>
   );
 }

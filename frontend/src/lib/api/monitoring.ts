@@ -23,15 +23,36 @@ export async function getMetrics(projectId: string, databaseId: string, range: s
  * @param search - Search term filter
  * @param level - Log severity level filter (e.g. 'all', 'error', 'info')
  */
-export async function getLogs(projectId: string, databaseId: string, search: string, level: string) {
-  return apiClient(endpoints.monitoring.logs, {}, { projectId, databaseId, search, level });
+export async function getLogs(projectId: string, databaseId: string, search?: string, level?: string) {
+  const query = new URLSearchParams();
+  if (search) query.set('search', search);
+  if (level && level !== 'all') query.set('level', level);
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  return apiClient(
+    { path: `${endpoints.monitoring.logs.path}${qs}`, method: 'GET' },
+    {},
+    { projectId, databaseId }
+  );
 }
 
 /**
  * Fetches audit log events and state transitions for a project or specific database.
  * @param projectId - Target project identifier
  * @param databaseId - Optional database instance identifier
+ * @param options - Pagination options
  */
-export async function getEvents(projectId: string, databaseId?: string) {
-  return apiClient(endpoints.monitoring.events, {}, { projectId, databaseId: databaseId || '' });
+export async function getEvents(
+  projectId: string, 
+  databaseId?: string,
+  options?: { page?: number; limit?: number }
+) {
+  const query = new URLSearchParams();
+  if (options?.page) query.set('page', String(options.page));
+  if (options?.limit) query.set('limit', String(options.limit));
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  return apiClient(
+    { path: `${endpoints.monitoring.events.path}${qs}`, method: 'GET' },
+    {},
+    { projectId, databaseId: databaseId || '' }
+  );
 }

@@ -6,12 +6,12 @@
 
 export function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    Owner: 'bg-accent/10 text-accent border-accent/20',
-    Admin: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    Member: 'bg-surface-2 text-muted border-border'
+    Owner: 'bg-accent/10 text-accent border-accent/30',
+    Admin: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    Member: 'bg-surface-2 text-muted border-border/50'
   };
   return (
-    <span className={`text-xs font-mono px-2 py-0.5 rounded border ${colors[role] || colors.Member}`}>
+    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${colors[role] || colors.Member}`}>
       {role}
     </span>
   );

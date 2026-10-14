@@ -32,3 +32,18 @@ export const databaseDetailParamsSchema = z
 export type DatabaseDetailParamsDto = z.infer<
   typeof databaseDetailParamsSchema
 >;
+
+export const operationParamsSchema = z
+  .object({
+    projectId: z.string().uuid('Invalid project ID format. Must be a valid UUID'),
+    databaseId: z
+      .string()
+      .uuid('Invalid database ID format. Must be a valid UUID'),
+    operationId: z
+      .string()
+      .uuid('Invalid operation ID format. Must be a valid UUID'),
+  })
+  .strict();
+
+export type OperationParamsDto = z.infer<typeof operationParamsSchema>;
+

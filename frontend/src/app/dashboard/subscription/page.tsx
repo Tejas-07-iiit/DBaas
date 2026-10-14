@@ -15,7 +15,8 @@ import { mapSubscription } from "@/lib/api/mappers";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
-import { Check } from "lucide-react";
+import { toast } from "@/components/providers/ToastProvider";
+import { Check, CreditCard, Sparkles, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
 
 export default function SubscriptionPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -59,11 +60,11 @@ export default function SubscriptionPage() {
           const newData = await subQuery.refetch();
           if (pollingStatus === 'cancelling' && newData.data?.status !== 'active') {
              setPollingStatus('none');
-             alert("Cancellation requested");
+             toast.info("Cancellation processed successfully");
              clearInterval(interval);
           } else if (pollingStatus === 'success' && newData.data?.planName !== subQuery.data?.planName) {
              setPollingStatus('none');
-             alert("Plan updated successfully");
+             toast.success("Plan updated successfully");
              clearInterval(interval);
           }
        }, 3000);
@@ -75,7 +76,6 @@ export default function SubscriptionPage() {
     queryKey: ["plans"],
     queryFn: async () => {
       const res: any = await listPlans();
-      // Assume the plans return directly as array or in data
       return res.data || res || [];
     }
   });
@@ -83,8 +83,11 @@ export default function SubscriptionPage() {
   const cancelMut = useMutation({
     mutationFn: () => cancelSubscription(),
     onSuccess: () => {
-      alert("Subscription cancelled.");
+      toast.success("Subscription cancelled successfully");
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to cancel subscription");
     }
   });
 
@@ -97,8 +100,11 @@ export default function SubscriptionPage() {
         else router.push(checkoutUrl);
       } else {
         queryClient.invalidateQueries({ queryKey: ["subscription"] });
-        alert("Plan changed.");
+        toast.success("Plan updated successfully");
       }
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Checkout failed");
     }
   });
 
@@ -107,117 +113,206 @@ export default function SubscriptionPage() {
 
   if (pollingStatus === 'success' || pollingStatus === 'cancelling') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in">
-         <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
-         <h2 className="text-xl font-bold">{pollingStatus === 'success' ? "Confirming your payment..." : "Cancellation requested..."}</h2>
-         <p className="text-muted mt-2">Please wait while we update your subscription.</p>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center space-y-4">
+         <Loader2 size={32} className="animate-spin text-accent" />
+         <h2 className="text-lg font-bold text-text">
+           {pollingStatus === 'success' ? "Confirming plan change..." : "Processing cancellation request..."}
+         </h2>
+         <p className="text-muted text-xs max-w-sm">Please wait while our billing webhook synchronizes your account quotas.</p>
       </div>
     );
   }
   if (pollingStatus === 'timeout') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in">
-         <h2 className="text-xl font-bold">Still processing</h2>
-         <p className="text-muted mt-2 mb-6">Your plan will update here shortly.</p>
-         <button onClick={() => setPollingStatus('none')} className="px-4 py-2 bg-text text-bg rounded font-bold">Check again</button>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center space-y-4">
+         <h2 className="text-lg font-bold text-text">Payment Still Synchronizing</h2>
+         <p className="text-muted text-xs max-w-sm">Your new subscription plan will update momentarily.</p>
+         <button onClick={() => setPollingStatus('none')} className="px-4 py-2 bg-accent text-bg rounded-lg font-semibold text-xs">
+           Refresh Status
+         </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl animate-in fade-in duration-500">
-      <h1 className="text-2xl font-bold mb-8">Subscription</h1>
-         {pollingStatus === 'cancelled' && <div className="mb-6 p-4 border border-border/50 bg-surface/30 rounded text-muted">Checkout cancelled, no changes made.</div>}
+    <div className="max-w-6xl space-y-8">
+      <div className="pb-2 border-b border-border/30">
+        <h1 className="text-2xl font-bold tracking-tight text-text">Subscription & Billing</h1>
+        <p className="text-muted text-xs mt-1">Manage database platform tiers, compute capacity, and payment methods</p>
+      </div>
 
-      {/* CURRENT PLAN */}
-      <h2 className="text-lg font-bold mb-4">Current plan</h2>
-      {subQuery.isLoading && <div className="animate-pulse bg-surface-2 h-32 rounded-xl mb-8"></div>}
-      {subQuery.error && <ErrorState error={subQuery.error} onRetry={subQuery.refetch} />}
-      {!subQuery.isLoading && !subQuery.error && (
-        noPlan ? (
-          <EmptyState title="No active plan" action={<button onClick={() => document.getElementById('plans')?.scrollIntoView({behavior: 'smooth'})} className="px-4 py-2 bg-text text-bg rounded mt-4">View plans</button>} />
-        ) : (
-          <div className="bg-surface/30 border border-border/50 rounded-xl p-6 mb-12 flex flex-col md:flex-row justify-between items-start gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-xl font-bold">{plan.planName}</h3>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase ${plan.status === 'cancelling' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30' : 'bg-[#3FCF6D]/10 text-[#3FCF6D] border border-[#3FCF6D]/30'}`}>
-                  {plan.status}
-                </span>
-              </div>
-              <p className="text-sm text-muted mb-6">
-                {plan.status === 'cancelling' ? `Ends on ${new Date(plan.renewalDate).toLocaleDateString()}` : `Renews on ${new Date(plan.renewalDate).toLocaleDateString()}`}
-              </p>
-              
-              {plan.limits && Object.keys(plan.limits).length > 0 && (
-                <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                  {Object.entries(plan.limits).map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between gap-4 border-b border-border/50 pb-1">
-                      <span className="text-muted capitalize">{k}</span>
-                      <span className="font-mono">{String(v)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div className="flex flex-col gap-3 min-w-[200px]">
-              <button onClick={() => document.getElementById('plans')?.scrollIntoView({behavior: 'smooth'})} className="w-full px-4 py-2 bg-text text-bg rounded font-bold text-sm hover:opacity-90 transition-opacity">Change plan</button>
-              {plan.status !== 'cancelling' && (
-                <button onClick={() => setCancelOpen(true)} className="w-full px-4 py-2 border border-red-500/30 text-red-400 rounded font-bold text-sm hover:bg-red-500/10 transition-colors">Cancel subscription</button>
-              )}
-            </div>
-          </div>
-        )
-      )}
-
-      {/* PLANS GRID */}
-      <h2 id="plans" className="text-lg font-bold mb-4 pt-4">Available plans</h2>
-      {plansQuery.isLoading && <div className="grid md:grid-cols-3 gap-6"><div className="animate-pulse bg-surface-2 h-64 rounded-xl"></div></div>}
-      {plansQuery.error && <ErrorState error={plansQuery.error} onRetry={plansQuery.refetch} />}
-      {!plansQuery.isLoading && !plansQuery.error && (
-        <div className="grid md:grid-cols-3 gap-6">
-          {plansQuery.data.map((p: any) => {
-            const isCurrent = plan?.planName === p.name && plan?.status !== 'cancelling';
-            return (
-              <div key={p.id} className={`bg-surface/30 border rounded-xl p-6 flex flex-col ${isCurrent ? 'border-accent' : 'border-border/50 hover:border-accent/50'}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold">{p.name}</h3>
-                  {isCurrent && <span className="px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 text-[10px] font-bold tracking-widest uppercase rounded">Current plan</span>}
-                </div>
-                <div className="mb-4">
-                  <span className="text-3xl font-bold">${p.price}</span>
-                  <span className="text-muted">/{p.interval}</span>
-                </div>
-                <p className="text-sm text-muted mb-6 flex-1">{p.description}</p>
-                
-                <div className="mb-6 flex flex-col gap-2">
-                  {p.features?.map((f: string, i: number) => (
-                    <div key={i} className="flex items-center gap-2 text-sm text-text"><Check size={14} className="text-accent" /> {f}</div>
-                  ))}
-                </div>
-
-                <button 
-                  onClick={() => checkoutMut.mutate(p.id)}
-                  disabled={isCurrent || checkoutMut.isPending}
-                  className={`w-full px-4 py-2 rounded font-bold text-sm disabled:opacity-50 ${isCurrent ? 'bg-surface-2 text-muted' : 'bg-text text-bg hover:opacity-90 transition-opacity'}`}
-                >
-                  {checkoutMut.isPending && checkoutMut.variables === p.id ? "Processing..." : isCurrent ? "Current plan" : `Switch to ${p.name}`}
-                </button>
-              </div>
-            );
-          })}
+      {pollingStatus === 'cancelled' && (
+        <div className="p-4 border border-border/60 bg-surface/50 rounded-xl text-xs text-muted">
+          Checkout was cancelled. No changes have been made to your active tier.
         </div>
       )}
+
+      {/* CURRENT PLAN */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-text">Active Tier</h2>
+        
+        {subQuery.isLoading && <div className="h-40 bg-surface-2/40 rounded-xl animate-pulse"></div>}
+        {subQuery.error && <ErrorState error={subQuery.error} onRetry={subQuery.refetch} />}
+        
+        {!subQuery.isLoading && !subQuery.error && (
+          noPlan ? (
+            <EmptyState 
+              title="No active paid plan" 
+              description="Your account is currently running on the Free Sandbox tier. Upgrade to unlock dedicated compute, higher storage quotas, and production SLAs."
+              action={
+                <button 
+                  onClick={() => document.getElementById('plans')?.scrollIntoView({behavior: 'smooth'})} 
+                  className="px-4 py-2 bg-accent text-bg rounded-lg font-semibold text-xs hover:opacity-90"
+                >
+                  Explore Production Plans
+                </button>
+              } 
+            />
+          ) : (
+            <div className="bg-surface/50 border border-border/60 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start gap-8 shadow-sm">
+              <div className="space-y-4 flex-1">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="text-xl font-bold text-text">{plan.planName}</h3>
+                    <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+                      plan.status === 'cancelling' 
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' 
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    }`}>
+                      {plan.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted font-mono">
+                    {plan.status === 'cancelling' 
+                      ? `Access ends on ${new Date(plan.renewalDate).toLocaleDateString()}` 
+                      : `Automatic renewal on ${new Date(plan.renewalDate).toLocaleDateString()}`}
+                  </p>
+                </div>
+                
+                {plan.limits && Object.keys(plan.limits).length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-border/30 text-xs">
+                    {Object.entries(plan.limits).map(([k, v]) => (
+                      <div key={k} className="p-3 bg-surface-2/40 rounded-lg border border-border/40">
+                        <span className="text-[11px] text-muted capitalize block mb-0.5">{k}</span>
+                        <span className="font-mono font-bold text-sm text-text">{String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex flex-col gap-2.5 min-w-[180px] w-full md:w-auto">
+                <button 
+                  onClick={() => document.getElementById('plans')?.scrollIntoView({behavior: 'smooth'})} 
+                  className="w-full px-4 py-2 bg-accent text-bg rounded-lg font-semibold text-xs hover:opacity-90 transition-opacity"
+                >
+                  Switch Tier
+                </button>
+                {plan.status !== 'cancelling' && (
+                  <button 
+                    onClick={() => setCancelOpen(true)} 
+                    className="w-full px-4 py-2 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-lg font-medium text-xs transition-colors"
+                  >
+                    Cancel Subscription
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        )}
+      </div>
+
+      {/* PLANS COMPARISON GRID */}
+      <div id="plans" className="space-y-4 pt-4">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-text">Available Platform Tiers</h2>
+          <p className="text-xs text-muted mt-0.5">Scale hardware resources transparently across all database instances</p>
+        </div>
+
+        {plansQuery.isLoading && (
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="h-80 bg-surface-2/40 rounded-xl animate-pulse"></div>
+            <div className="h-80 bg-surface-2/40 rounded-xl animate-pulse"></div>
+            <div className="h-80 bg-surface-2/40 rounded-xl animate-pulse"></div>
+          </div>
+        )}
+
+        {plansQuery.error && <ErrorState error={plansQuery.error} onRetry={plansQuery.refetch} />}
+
+        {!plansQuery.isLoading && !plansQuery.error && (
+          <div className="grid md:grid-cols-3 gap-6 items-stretch">
+            {plansQuery.data.map((p: any) => {
+              const isCurrent = plan?.planName === p.name && plan?.status !== 'cancelling';
+              return (
+                <div 
+                  key={p.id} 
+                  className={`bg-surface/50 border rounded-xl p-6 flex flex-col justify-between transition-all ${
+                    isCurrent 
+                      ? 'border-accent shadow-md shadow-accent/5 ring-1 ring-accent/30' 
+                      : 'border-border/60 hover:border-accent/40'
+                  }`}
+                >
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <h3 className="text-lg font-bold text-text">{p.name}</h3>
+                        <p className="text-xs text-muted mt-1 leading-relaxed">{p.description}</p>
+                      </div>
+                      {isCurrent && (
+                        <span className="px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 text-[10px] font-bold tracking-wider uppercase rounded shrink-0">
+                          Active
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="py-2 border-y border-border/30">
+                      <span className="text-3xl font-extrabold tracking-tight text-text">${p.price}</span>
+                      <span className="text-muted text-xs font-mono ml-1">/{p.interval}</span>
+                    </div>
+
+                    <div className="space-y-2.5 text-xs">
+                      {p.features?.map((f: string, i: number) => (
+                        <div key={i} className="flex items-center gap-2.5 text-text">
+                          <Check size={14} className="text-accent shrink-0" strokeWidth={2.5} />
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-6 border-t border-border/30">
+                    <button 
+                      onClick={() => checkoutMut.mutate(p.id)}
+                      disabled={isCurrent || checkoutMut.isPending}
+                      className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs transition-all disabled:opacity-40 ${
+                        isCurrent 
+                          ? 'bg-surface-2 text-muted cursor-default' 
+                          : 'bg-accent text-bg hover:opacity-90 shadow-sm'
+                      }`}
+                    >
+                      {checkoutMut.isPending && checkoutMut.variables === p.id 
+                        ? "Processing..." 
+                        : isCurrent 
+                        ? "Current Plan" 
+                        : `Switch to ${p.name}`}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog 
         isOpen={cancelOpen} 
         onClose={() => setCancelOpen(false)} 
-        title="Cancel subscription"
-        message="Your subscription will remain active until the end of the current billing period. After that, your databases will be stopped."
-        confirmText="Cancel subscription"
-        danger={true}
-        onConfirm={() => cancelMut.mutate()}
+        title="Cancel Active Subscription?" 
+        message="Your subscription will remain active until the end of the current billing cycle. After that, database instances will be suspended." 
+        confirmText="Cancel Subscription" 
+        danger={true} 
+        isLoading={cancelMut.isPending} 
+        onConfirm={() => cancelMut.mutate()} 
       />
     </div>
   );

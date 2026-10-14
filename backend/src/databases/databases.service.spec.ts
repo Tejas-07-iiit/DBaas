@@ -68,6 +68,17 @@ describe('DatabasesService', () => {
           _sum: { cpuCores: 0, ramMb: 0, storageMb: 0 },
         }),
       },
+      databaseOperation: {
+        create: jest.fn().mockResolvedValue({ id: 'op-1', status: 'PENDING' }),
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
+      },
+      databaseCredential: {
+        findMany: jest.fn(),
+        create: jest.fn(),
+        updateMany: jest.fn(),
+      },
       databaseEvent: {
         create: jest.fn(),
         findMany: jest.fn(),
@@ -95,6 +106,11 @@ describe('DatabasesService', () => {
       add: jest.fn().mockResolvedValue({ id: 'job-1' }),
     };
 
+    const mockEncryptionService = {
+      encrypt: jest.fn().mockReturnValue('encrypted-mock-pass'),
+      decrypt: jest.fn().mockReturnValue('decrypted-mock-pass'),
+    };
+
     service = new DatabasesService(
       prisma,
       usersService,
@@ -103,6 +119,7 @@ describe('DatabasesService', () => {
       lifecycleService,
       quotaService,
       mockQueue,
+      mockEncryptionService as any,
     );
   });
 
@@ -341,6 +358,198 @@ describe('DatabasesService', () => {
           mockDatabase.id,
         ),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('startDatabase', () => {
+    it('should transition STOPPED database to STARTING and enqueue start job', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.databaseInstance.findUnique.mockResolvedValue({
+        ...mockDatabase,
+        status: DatabaseStatus.STOPPED,
+        vmId: 'vm-123',
+      });
+
+      const result = await service.startDatabase(
+        { uid: mockUser.firebaseUid, email: mockUser.email },
+        mockProject.id,
+        mockDatabase.id,
+      );
+
+      expect(result.status).toBe(DatabaseStatus.STARTING);
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'start-database',
+        expect.objectContaining({ databaseId: mockDatabase.id }),
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe('stopDatabase', () => {
+    it('should transition RUNNING database to STOPPING and enqueue stop job', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.databaseInstance.findUnique.mockResolvedValue({
+        ...mockDatabase,
+        status: DatabaseStatus.RUNNING,
+        vmId: 'vm-123',
+      });
+
+      const result = await service.stopDatabase(
+        { uid: mockUser.firebaseUid, email: mockUser.email },
+        mockProject.id,
+        mockDatabase.id,
+      );
+
+      expect(result.status).toBe(DatabaseStatus.STOPPING);
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'stop-database',
+        expect.objectContaining({ databaseId: mockDatabase.id }),
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe('restartDatabase', () => {
+    it('should transition RUNNING database to RESTARTING and enqueue restart job', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.databaseInstance.findUnique.mockResolvedValue({
+        ...mockDatabase,
+        status: DatabaseStatus.RUNNING,
+        vmId: 'vm-123',
+      });
+
+      const result = await service.restartDatabase(
+        { uid: mockUser.firebaseUid, email: mockUser.email },
+        mockProject.id,
+        mockDatabase.id,
+      );
+
+      expect(result.status).toBe(DatabaseStatus.RESTARTING);
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'restart-database',
+        expect.objectContaining({ databaseId: mockDatabase.id }),
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe('getConnectionDetails', () => {
+    it('should return decrypted connection URI for RUNNING database', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.MEMBER,
+        project: mockProject,
+      });
+
+      prisma.databaseInstance.findUnique.mockResolvedValue({
+        ...mockDatabase,
+        status: DatabaseStatus.RUNNING,
+        internalIp: '10.50.0.15',
+        port: 5432,
+        credentials: [
+          {
+            username: 'dbaas_admin',
+            encryptedPassword: 'encrypted-secret-pass',
+            isActive: true,
+          },
+        ],
+      });
+
+      const conn = await service.getConnectionDetails(
+        { uid: mockUser.firebaseUid, email: mockUser.email },
+        mockProject.id,
+        mockDatabase.id,
+      );
+
+      expect(conn).toBeDefined();
+      expect(conn.host).toBe('10.50.0.15');
+      expect(conn.port).toBe(5432);
+      expect(conn.username).toBe('dbaas_admin');
+      expect(conn.connectionUri).toContain('postgresql://dbaas_admin:');
+    });
+
+    it('should reject connection details request if database is not in RUNNING status', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.MEMBER,
+        project: mockProject,
+      });
+
+      prisma.databaseInstance.findUnique.mockResolvedValue({
+        ...mockDatabase,
+        status: DatabaseStatus.STOPPED,
+        credentials: [],
+      });
+
+      await expect(
+        service.getConnectionDetails(
+          { uid: mockUser.firebaseUid, email: mockUser.email },
+          mockProject.id,
+          mockDatabase.id,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('operations', () => {
+    it('should get single operation by ID', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.MEMBER,
+        project: mockProject,
+      });
+
+      prisma.databaseInstance.findUnique.mockResolvedValue({ ...mockDatabase });
+      prisma.databaseOperation.findUnique.mockResolvedValue({
+        id: 'op-123',
+        databaseId: mockDatabase.id,
+        type: 'PROVISION',
+        status: 'COMPLETED',
+        retryCount: 0,
+        maxRetries: 3,
+        errorDetails: null,
+        startedAt: new Date(),
+        completedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const op = await service.getOperation(
+        { uid: mockUser.firebaseUid, email: mockUser.email },
+        mockProject.id,
+        mockDatabase.id,
+        'op-123',
+      );
+
+      expect(op.id).toBe('op-123');
+      expect(op.status).toBe('COMPLETED');
     });
   });
 });

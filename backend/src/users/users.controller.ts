@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Patch, Put, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { FirebaseUser } from '../auth/interfaces/firebase-user.interface';
@@ -15,6 +15,7 @@ export class UsersController {
     return this.usersService.toResponse(user);
   }
 
+  @Put('me')
   @Patch('me')
   async updateMe(
     @CurrentUser() firebaseUser: FirebaseUser,

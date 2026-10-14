@@ -9,6 +9,10 @@ export const envSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().optional().default(''),
   FIREBASE_CLIENT_EMAIL: z.string().optional().default(''),
   FIREBASE_PRIVATE_KEY: z.string().optional().default(''),
+  INFRASTRUCTURE_PROVIDER: z.enum(['mock', 'local', 'central-management']).default('mock'),
+  ENCRYPTION_KEY: z.string().optional().default('dbaas-default-dev-encryption-key-32b!'),
+  CENTRAL_MANAGEMENT_URL: z.string().optional().default('http://10.50.0.2:8443'),
+  CENTRAL_MANAGEMENT_API_KEY: z.string().optional().default(''),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

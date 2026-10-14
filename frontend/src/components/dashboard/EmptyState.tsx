@@ -5,18 +5,23 @@
  */
 
 import React from "react";
+import { Inbox } from "lucide-react";
 
 interface EmptyStateProps {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  icon?: React.ReactNode;
 }
 
-export function EmptyState({ title, description, action }: EmptyStateProps) {
+export function EmptyState({ title, description, action, icon }: EmptyStateProps) {
   return (
-    <div className="p-12 text-center border border-dashed border-border/50 rounded-xl bg-surface/30 flex flex-col items-center">
-      <h3 className="text-lg font-bold mb-2">{title}</h3>
-      {description && <p className="text-muted mb-6 max-w-md">{description}</p>}
+    <div className="py-16 px-8 text-center border border-dashed border-border/50 rounded-lg bg-surface/20 flex flex-col items-center">
+      <div className="mb-4 text-muted/40">
+        {icon || <Inbox size={40} strokeWidth={1.5} />}
+      </div>
+      <h3 className="text-base font-semibold mb-1 text-text">{title}</h3>
+      {description && <p className="text-sm text-muted mb-6 max-w-sm">{description}</p>}
       {action}
     </div>
   );

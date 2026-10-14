@@ -202,11 +202,19 @@ All endpoints use URI versioning prefixed with `/api/v1/`.
 | `DELETE` | `/api/v1/projects/:projectId/members/:userId` | OWNER, ADMIN | Remove member |
 | `GET` | `/api/v1/database-engines` | Public | Supported engine catalog & capability status |
 | `GET` | `/api/v1/database-engines/:engine` | Public | Single engine metadata and versions |
-| `POST` | `/api/v1/projects/:projectId/databases` | OWNER, ADMIN | Create database instance record |
+| `POST` | `/api/v1/projects/:projectId/databases` | OWNER, ADMIN | Create database instance record & enqueue async provisioning |
 | `GET` | `/api/v1/projects/:projectId/databases` | Member | List project databases (paginated & filtered) |
 | `GET` | `/api/v1/projects/:projectId/databases/:databaseId` | Member | Get database metadata (strictly scoped) |
 | `PATCH` | `/api/v1/projects/:projectId/databases/:databaseId` | OWNER, ADMIN | Update mutable metadata (name) |
-| `DELETE` | `/api/v1/projects/:projectId/databases/:databaseId` | OWNER, ADMIN | Safe database deletion request |
+| `DELETE` | `/api/v1/projects/:projectId/databases/:databaseId` | OWNER, ADMIN | Safe database deletion & async VM teardown |
+| `POST` | `/api/v1/projects/:projectId/databases/:databaseId/start` | OWNER, ADMIN | Boot stopped database VM asynchronously |
+| `POST` | `/api/v1/projects/:projectId/databases/:databaseId/stop` | OWNER, ADMIN | Gracefully suspend running database VM |
+| `POST` | `/api/v1/projects/:projectId/databases/:databaseId/restart` | OWNER, ADMIN | Reboot running database VM |
+| `GET` | `/api/v1/projects/:projectId/databases/:databaseId/connection` | Member | Get decrypted connection parameters and URI |
+| `POST` | `/api/v1/projects/:projectId/databases/:databaseId/credentials/rotate` | OWNER, ADMIN | Securely rotate database credentials |
+| `GET` | `/api/v1/projects/:projectId/databases/:databaseId/operations` | Member | List asynchronous operations for database |
+| `GET` | `/api/v1/projects/:projectId/databases/:databaseId/operations/:operationId` | Member | Get single operation status and details |
+| `POST` | `/api/v1/projects/:projectId/databases/:databaseId/reconcile` | OWNER, ADMIN | Trigger infrastructure state reconciliation |
 | `GET` | `/api/v1/projects/:projectId/databases/:databaseId/events` | Member | Paginated lifecycle event audit log |
 
 ---

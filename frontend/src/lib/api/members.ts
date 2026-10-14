@@ -11,7 +11,8 @@ import { endpoints } from '@/config/endpoints';
  * @param projectId - Target project identifier
  */
 export async function listMembers(projectId: string) {
-  return apiClient(endpoints.members.list, {}, { projectId });
+  const res: any = await apiClient(endpoints.members.list, {}, { projectId });
+  return Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
 }
 
 /**
@@ -30,7 +31,7 @@ export async function addMember(projectId: string, data: any) {
  * @param role - New assigned role ('Admin' | 'Member')
  */
 export async function updateMemberRole(projectId: string, memberId: string, role: string) {
-  return apiClient(endpoints.members.updateRole, { body: JSON.stringify({ role }) }, { projectId, memberId });
+  return apiClient(endpoints.members.updateRole, { body: JSON.stringify({ role }) }, { projectId, userId: memberId, memberId });
 }
 
 /**
@@ -39,5 +40,5 @@ export async function updateMemberRole(projectId: string, memberId: string, role
  * @param memberId - Target member identifier to remove
  */
 export async function removeMember(projectId: string, memberId: string) {
-  return apiClient(endpoints.members.remove, {}, { projectId, memberId });
+  return apiClient(endpoints.members.remove, {}, { projectId, userId: memberId, memberId });
 }

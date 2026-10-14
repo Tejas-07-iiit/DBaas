@@ -18,6 +18,9 @@ services:
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
       - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
       - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+      - INFRASTRUCTURE_PROVIDER=${INFRASTRUCTURE_PROVIDER:-central-management}
+      - CENTRAL_MANAGEMENT_URL=${CENTRAL_MANAGEMENT_URL:-http://10.50.0.7:8080}
+      - CENTRAL_MANAGEMENT_API_KEY=${CENTRAL_MANAGEMENT_API_KEY}
     command: >
       sh -c "npx prisma migrate deploy && node dist/main"
     depends_on:

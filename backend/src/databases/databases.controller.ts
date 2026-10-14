@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Body,
   Param,
@@ -29,6 +30,8 @@ import {
   DatabaseParamsDto,
   databaseDetailParamsSchema,
   DatabaseDetailParamsDto,
+  operationParamsSchema,
+  OperationParamsDto,
 } from './dto/database-query.dto';
 
 @Controller('projects/:projectId/databases')
@@ -78,6 +81,7 @@ export class DatabasesController {
     );
   }
 
+  @Put(':databaseId')
   @Patch(':databaseId')
   async updateDatabase(
     @CurrentUser() firebaseUser: FirebaseUser,
@@ -102,6 +106,180 @@ export class DatabasesController {
     params: DatabaseDetailParamsDto,
   ) {
     await this.databasesService.deleteDatabase(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Post(':databaseId/start')
+  async startDatabase(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.startDatabase(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Post(':databaseId/stop')
+  async stopDatabase(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.stopDatabase(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Post(':databaseId/restart')
+  async restartDatabase(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.restartDatabase(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Get(':databaseId/connection')
+  async getConnectionDetails(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.getConnectionDetails(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Post(':databaseId/credentials/rotate')
+  async rotateCredentials(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.rotateCredentials(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Get(':databaseId/explorer')
+  async getExplorerOverview(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.getExplorerOverview(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Get(':databaseId/explorer/documents')
+  async getCollectionDocuments(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+    @Query('db') dbName: string,
+    @Query('collection') collectionName: string,
+    @Query('limit') limit?: number,
+    @Query('skip') skip?: number,
+    @Query('search') search?: string,
+  ) {
+    return this.databasesService.getCollectionDocuments(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+      dbName,
+      collectionName,
+      limit,
+      skip,
+      search,
+    );
+  }
+
+  @Post(':databaseId/explorer/documents')
+  async insertCollectionDocument(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+    @Body() body: { db: string; collection: string; document: any },
+  ) {
+    return this.databasesService.insertCollectionDocument(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+      body.db,
+      body.collection,
+      body.document,
+    );
+  }
+
+  @Get(':databaseId/database-users')
+  async getDatabaseUsers(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.getDatabaseUsers(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+    );
+  }
+
+  @Get(':databaseId/operations')
+  async listOperations(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+    @Query(new ZodValidationPipe(databaseQuerySchema))
+    query: DatabaseQueryDto,
+  ) {
+    return this.databasesService.listOperations(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+      query,
+    );
+  }
+
+  @Get(':databaseId/operations/:operationId')
+  async getOperation(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(operationParamsSchema))
+    params: OperationParamsDto,
+  ) {
+    return this.databasesService.getOperation(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+      params.operationId,
+    );
+  }
+
+  @Post(':databaseId/reconcile')
+  async reconcileDatabase(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+  ) {
+    return this.databasesService.reconcileDatabase(
       firebaseUser,
       params.projectId,
       params.databaseId,

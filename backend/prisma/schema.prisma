@@ -70,6 +70,22 @@ enum DatabaseEventType {
   PROVISIONING_REQUESTED
 }
 
+enum OperationType {
+  PROVISION
+  START
+  STOP
+  RESTART
+  DELETE
+}
+
+enum OperationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 model User {
   id          String       @id @default(uuid()) @db.Uuid
   firebaseUid String       @unique @map("firebase_uid")
@@ -164,6 +180,7 @@ model DatabaseInstance {
 
   credentials   DatabaseCredential[]
   events        DatabaseEvent[]
+  operations    DatabaseOperation[]
 
   @@index([projectId])
   @@index([status])
@@ -202,6 +219,30 @@ model DatabaseEvent {
   @@index([databaseId])
   @@index([createdAt])
   @@map("database_events")
+}
+
+model DatabaseOperation {
+  id           String          @id @default(uuid()) @db.Uuid
+  type         OperationType
+  status       OperationStatus @default(PENDING)
+  retryCount   Int             @default(0) @map("retry_count")
+  maxRetries   Int             @default(3) @map("max_retries")
+  providerOpId String?         @map("provider_op_id")
+  errorDetails String?         @map("error_details")
+  metadata     Json?
+  startedAt    DateTime?       @map("started_at")
+  completedAt  DateTime?       @map("completed_at")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  databaseId   String          @map("database_id") @db.Uuid
+  database     DatabaseInstance @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  @@index([databaseId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("database_operations")
 }
 
 model AuditLog {

@@ -10,6 +10,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { isDemoEnabled } from "@/lib/auth/demo/demoConfig";
 import { updateDemoData, getDemoData } from "@/lib/demo/db";
 import { useEffect, useState } from "react";
+import { CreditCard, ArrowLeft, ShieldCheck } from "lucide-react";
 
 export default function CheckoutDemo() {
   const searchParams = useSearchParams();
@@ -41,24 +42,45 @@ export default function CheckoutDemo() {
     router.push('/dashboard/subscription');
   };
 
-  if (!plan) return <div className="p-8 text-center text-muted">Loading plan...</div>;
+  if (!plan) return <div className="p-8 text-center text-muted text-xs">Loading plan details...</div>;
 
   return (
-    <div className="max-w-md mx-auto mt-12 animate-in fade-in duration-500">
-      <div className="bg-surface/30 border border-border/50 p-8 rounded-xl text-center">
-        <div className="w-12 h-12 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">D</div>
-        <h1 className="text-2xl font-bold mb-2">Demo checkout</h1>
-        <p className="text-muted mb-8">No payment is taken. This is a local simulation.</p>
-
-        <div className="bg-surface-2 rounded p-4 mb-8 text-left">
-          <div className="text-sm text-muted uppercase tracking-widest font-mono mb-2">Selected Plan</div>
-          <div className="text-xl font-bold">{plan.name}</div>
-          <div className="text-accent">${plan.price} / {plan.interval}</div>
+    <div className="max-w-md mx-auto mt-8">
+      <div className="bg-surface/50 border border-amber-500/40 p-8 rounded-xl text-center space-y-6 shadow-xl">
+        <div className="w-12 h-12 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded-xl flex items-center justify-center mx-auto">
+          <CreditCard size={22} />
+        </div>
+        
+        <div>
+          <h1 className="text-xl font-bold text-text">Demo Mode Sandbox Checkout</h1>
+          <p className="text-xs text-muted mt-1">Simulated payment workflow. No credit card or real payment required.</p>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <button onClick={confirm} className="w-full px-4 py-3 bg-text text-bg rounded font-bold hover:opacity-90 transition-opacity">Confirm plan change</button>
-          <button onClick={() => router.back()} className="w-full px-4 py-3 border border-border/50 rounded font-bold hover:bg-surface-2 transition-colors">Go back</button>
+        <div className="bg-surface-2/60 border border-border/60 rounded-xl p-4 text-left space-y-2">
+          <div className="text-[10px] text-muted uppercase tracking-wider font-semibold">Selected Tier</div>
+          <div className="flex justify-between items-baseline">
+            <span className="text-lg font-bold text-text">{plan.name}</span>
+            <span className="text-sm font-bold text-accent">${plan.price} <span className="text-xs text-muted font-normal">/{plan.interval}</span></span>
+          </div>
+          <p className="text-xs text-muted leading-relaxed pt-1 border-t border-border/30">
+            {plan.description}
+          </p>
+        </div>
+
+        <div className="space-y-2.5">
+          <button 
+            onClick={confirm} 
+            className="w-full py-2.5 px-4 bg-accent text-bg rounded-lg font-semibold text-xs hover:opacity-90 transition-opacity"
+          >
+            Confirm Plan Upgrade (Demo)
+          </button>
+          <button 
+            onClick={() => router.back()} 
+            className="w-full py-2 px-4 border border-border/60 text-muted hover:text-text rounded-lg font-medium text-xs hover:bg-surface-2 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <ArrowLeft size={13} />
+            <span>Cancel and Go Back</span>
+          </button>
         </div>
       </div>
     </div>

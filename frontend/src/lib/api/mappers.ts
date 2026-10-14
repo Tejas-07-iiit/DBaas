@@ -75,12 +75,19 @@ export interface MeResponse {
 // 2. What does create return?
 // 3. What are the delete semantics?
 export function mapProject(data: any) {
+  let role = 'Member';
+  if (data?.role) {
+    const r = String(data.role).toLowerCase();
+    if (r === 'owner') role = 'Owner';
+    else if (r === 'admin') role = 'Admin';
+    else role = 'Member';
+  }
   return {
-    id: data.id || data._id,
-    name: data.name,
-    description: data.description || '',
-    createdAt: data.createdAt || data.created_at || new Date().toISOString(),
-    role: data.role || 'Member' // Owner, Admin, Member
+    id: data?.id || data?._id,
+    name: data?.name || '',
+    description: data?.description || '',
+    createdAt: data?.createdAt || data?.created_at || new Date().toISOString(),
+    role
   };
 }
 
@@ -89,34 +96,41 @@ export function mapProject(data: any) {
 // 1. What does the subscription object look like? Does it have planName, status, renewalDate?
 export function mapSubscription(data: any) {
   return {
-    planName: data.planName || data.plan?.name || 'Free Plan',
-    status: data.status || 'active',
-    renewalDate: data.renewalDate || data.current_period_end || null,
-    limits: data.limits || {}
+    planName: data?.planName || data?.plan?.name || 'Free Plan',
+    status: data?.status || 'active',
+    renewalDate: data?.renewalDate || data?.current_period_end || null,
+    limits: data?.limits || {}
   };
 }
 
 
-export type DbStatus = 'provisioning' | 'running' | 'stopped' | 'starting' | 'stopping' | 'restarting' | 'deleting' | 'failed' | 'unknown';
+export type DbStatus = 'provisioning' | 'running' | 'stopped' | 'starting' | 'stopping' | 'restarting' | 'deleting' | 'deleted' | 'failed' | 'unknown';
 export function mapDatabaseStatus(status: string): DbStatus {
   const s = (status || '').toLowerCase();
-  if (['provisioning', 'running', 'stopped', 'starting', 'stopping', 'restarting', 'deleting', 'failed'].includes(s)) return s as DbStatus;
+  if (s === 'requested' || s === 'pending') return 'provisioning';
+  if (s === 'error') return 'failed';
+  if (['provisioning', 'running', 'stopped', 'starting', 'stopping', 'restarting', 'deleting', 'deleted', 'failed'].includes(s)) return s as DbStatus;
   return 'unknown';
 }
 
 // ASSUMPTION - confirm with backend
 export function mapDatabase(data: any) {
+  const engine = (data.type || data.engine || 'postgresql').toLowerCase();
+  const defaultPort = engine.includes('post') ? 5432 : engine.includes('mongo') ? 27017 : 6333;
   return {
     id: data.id,
     projectId: data.projectId || data.project_id,
     name: data.name,
-    engine: data.engine || 'postgresql',
+    engine,
     status: mapDatabaseStatus(data.status),
-    statusUpdatedAt: data.statusUpdatedAt || data.status_updated_at || new Date().toISOString(),
+    statusUpdatedAt: data.statusUpdatedAt || data.status_updated_at || data.updatedAt || new Date().toISOString(),
     createdAt: data.createdAt || data.created_at || new Date().toISOString(),
-    cpu: data.cpu || 1,
-    memoryMb: data.memoryMb || data.memory_mb || 1024,
-    storageGb: data.storageGb || data.storage_gb || 10
+    cpu: data.cpuCores || data.cpu || 1,
+    memoryMb: data.ramMb || data.memoryMb || data.memory_mb || 1024,
+    storageGb: data.storageMb ? Math.round(data.storageMb / 1024) : (data.storageGb || data.storage_gb || 10),
+    internalIp: data.internalIp || data.host || '',
+    port: data.port || defaultPort,
+    failureReason: data.failureReason || null,
   };
 }
 

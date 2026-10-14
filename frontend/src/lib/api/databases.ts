@@ -7,13 +7,16 @@
 
 import { apiClient } from './client';
 import { endpoints } from '@/config/endpoints';
+import { mapDatabase } from './mappers';
 
 /**
  * Lists all databases belonging to a project.
  * @param projectId - Target project identifier
  */
 export async function listDatabases(projectId: string) {
-  return apiClient(endpoints.databases.list, {}, { projectId });
+  const res: any = await apiClient(endpoints.databases.list, {}, { projectId });
+  const raw = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  return raw.map(mapDatabase);
 }
 
 /**
@@ -22,7 +25,15 @@ export async function listDatabases(projectId: string) {
  * @param data - Provisioning configuration (name, engine, plan/resources)
  */
 export async function createDatabase(projectId: string, data: any) {
-  return apiClient(endpoints.databases.create, { body: JSON.stringify(data) }, { projectId });
+  const payload = {
+    name: data.name,
+    type: (data.type || data.engine || 'POSTGRESQL').toUpperCase(),
+    cpuCores: Number(data.cpuCores || data.cpu) || 1,
+    ramMb: Number(data.ramMb || data.memoryMb) || 1024,
+    storageMb: data.storageMb ? Number(data.storageMb) : (data.storageGb ? Number(data.storageGb) * 1024 : 5120),
+    ...(data.version ? { version: data.version } : {})
+  };
+  return apiClient(endpoints.databases.create, { body: JSON.stringify(payload) }, { projectId });
 }
 
 /**
@@ -86,7 +97,13 @@ export async function restartDatabase(projectId: string, databaseId: string) {
  * @param databaseId - Database identifier
  */
 export async function getDatabaseConnection(projectId: string, databaseId: string) {
-  return apiClient(endpoints.databases.connection, {}, { projectId, databaseId });
+  const res: any = await apiClient(endpoints.databases.connection, {}, { projectId, databaseId });
+  const data = res?.data || res || {};
+  return {
+    ...data,
+    endpoint: data.connectionUri || (data.host ? `${data.host}:${data.port}` : ''),
+    secretReference: data.password || '********',
+  };
 }
 
 /**
@@ -96,4 +113,59 @@ export async function getDatabaseConnection(projectId: string, databaseId: strin
  */
 export async function rotateDatabaseCredentials(projectId: string, databaseId: string) {
   return apiClient(endpoints.databases.rotateCredentials, {}, { projectId, databaseId });
+}
+
+/**
+ * Retrieves database and collection structure with document counts (Atlas-style Data Explorer).
+ */
+export async function getExplorerOverview(projectId: string, databaseId: string) {
+  const res: any = await apiClient(endpoints.databases.explorer, {}, { projectId, databaseId });
+  return res?.data || res;
+}
+
+/**
+ * Retrieves documents from a specific collection with filtering.
+ */
+export async function getCollectionDocuments(
+  projectId: string,
+  databaseId: string,
+  params: { db?: string; collection?: string; limit?: number; skip?: number; search?: string }
+) {
+  const query = new URLSearchParams();
+  if (params.db) query.set('db', params.db);
+  if (params.collection) query.set('collection', params.collection);
+  if (params.limit) query.set('limit', String(params.limit));
+  if (params.skip) query.set('skip', String(params.skip));
+  if (params.search) query.set('search', params.search);
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  const res: any = await apiClient(
+    { path: `${endpoints.databases.documents.path}${qs}`, method: 'GET' },
+    {},
+    { projectId, databaseId }
+  );
+  return res?.data || res;
+}
+
+/**
+ * Inserts a document into a collection.
+ */
+export async function insertCollectionDocument(
+  projectId: string,
+  databaseId: string,
+  payload: { db: string; collection: string; document: any }
+) {
+  const res: any = await apiClient(
+    endpoints.databases.insertDocument,
+    { body: JSON.stringify(payload) },
+    { projectId, databaseId }
+  );
+  return res?.data || res;
+}
+
+/**
+ * Retrieves database access users and assigned roles (Atlas-style Database Users).
+ */
+export async function getDatabaseUsers(projectId: string, databaseId: string) {
+  const res: any = await apiClient(endpoints.databases.databaseUsers, {}, { projectId, databaseId });
+  return res?.data || res;
 }

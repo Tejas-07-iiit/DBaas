@@ -13,7 +13,8 @@ import { endpoints } from '@/config/endpoints';
  * Retrieves the list of all projects accessible by the authenticated user.
  */
 export async function listProjects() {
-  return apiClient(endpoints.projects.list);
+  const res: any = await apiClient(endpoints.projects.list);
+  return Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
 }
 
 /**

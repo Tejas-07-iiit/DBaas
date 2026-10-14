@@ -18,11 +18,20 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   
   if (!user?.isPlatformAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in">
-        <Shield size={48} className="text-amber-500 mb-4 opacity-50" />
-        <h1 className="text-2xl font-bold mb-2">Admins only</h1>
-        <p className="text-muted mb-6">You need platform administrator privileges to view this area.</p>
-        <Link href="/dashboard" className="px-4 py-2 border border-border/50 rounded hover:bg-surface-2 transition-colors font-bold text-sm">Return to Dashboard</Link>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center">
+        <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-4">
+          <Shield size={24} />
+        </div>
+        <h1 className="text-xl font-bold mb-2 text-text">Platform Admin Restricted</h1>
+        <p className="text-muted text-xs max-w-sm mb-6 leading-relaxed">
+          You need elevated platform administrator privileges to inspect system-wide clusters and telemetry.
+        </p>
+        <Link 
+          href="/dashboard" 
+          className="px-4 py-2 border border-border/60 rounded-lg hover:bg-surface-2 text-text transition-colors font-medium text-xs"
+        >
+          Return to Overview
+        </Link>
       </div>
     );
   }

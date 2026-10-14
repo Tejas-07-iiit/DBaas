@@ -17,5 +17,11 @@ export default () => {
       clientEmail: env.FIREBASE_CLIENT_EMAIL,
       privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     },
+    infrastructure: {
+      provider: env.INFRASTRUCTURE_PROVIDER,
+      encryptionKey: env.ENCRYPTION_KEY,
+      centralManagementUrl: env.CENTRAL_MANAGEMENT_URL,
+      centralManagementApiKey: env.CENTRAL_MANAGEMENT_API_KEY,
+    },
   };
 };

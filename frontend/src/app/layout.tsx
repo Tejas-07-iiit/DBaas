@@ -8,6 +8,7 @@ import "./globals.css";
 import ScrollReset from "@/components/effects/ScrollReset";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 
 // Load fonts through Next.js (this prevents text flickering on load)
@@ -43,10 +44,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <QueryProvider>
           <AuthProvider>
-            <ScrollReset />
-            <SiteChrome>
-              {children}
-            </SiteChrome>
+            <ToastProvider>
+              <ScrollReset />
+              <SiteChrome>
+                {children}
+              </SiteChrome>
+            </ToastProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

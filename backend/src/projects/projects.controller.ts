@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Body,
   Param,
@@ -51,6 +52,7 @@ export class ProjectsController {
     return this.projectsService.getProject(firebaseUser, params.projectId);
   }
 
+  @Put(':projectId')
   @Patch(':projectId')
   async updateProject(
     @CurrentUser() firebaseUser: FirebaseUser,

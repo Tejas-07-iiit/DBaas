@@ -13,11 +13,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUserProfile, deleteAccount } from "@/lib/api/user";
 import { authApi } from "@/lib/api/auth";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import { toast } from "@/components/providers/ToastProvider";
 import { isDemoEnabled } from "@/lib/auth/demo/demoConfig";
 import { getDemoSession, clearDemoSession } from "@/lib/auth/demo/demoSession";
 import { resetDemoData } from "@/lib/demo/db";
 import { useRouter } from "next/navigation";
 import { DemoToolsModal } from "@/components/demo/DemoToolsModal";
+import { User, Lock, Wrench, AlertTriangle, KeyRound, Loader2 } from "lucide-react";
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
@@ -37,15 +39,18 @@ export default function AccountPage() {
   const updateMut = useMutation({
     mutationFn: () => updateUserProfile({ name }),
     onSuccess: () => {
-      alert("Profile updated");
-      // Actually we should just refresh the auth provider or reload.
+      toast.success("Profile updated successfully");
       window.location.reload(); 
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update profile");
     }
   });
 
   const resetMut = useMutation({
     mutationFn: () => authApi.forgotPassword({ email: user?.email || "" }),
     onSuccess: () => {
+      toast.success("Password reset email dispatched");
       setResetSent(true);
       setResetCooldown(30);
       const int = setInterval(() => {
@@ -54,6 +59,9 @@ export default function AccountPage() {
           return prev - 1;
         });
       }, 1000);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to send reset email");
     }
   });
 
@@ -62,7 +70,7 @@ export default function AccountPage() {
       if (isDemoEnabled() && getDemoSession()) {
         const db = require('@/lib/demo/db').getDemoData();
         const owned = db.members.filter((m: any) => m.email === db.user.email && m.role === 'Owner');
-        if (owned.length > 0) throw { status: 409, body: { message: "You own projects. Delete them first." } };
+        if (owned.length > 0) throw { status: 409, message: "You own projects. Delete them first." };
         require('@/lib/demo/db').resetDemoData();
         require('@/lib/auth/demo/demoSession').clearDemoSession();
         return;
@@ -70,115 +78,155 @@ export default function AccountPage() {
       return deleteAccount();
     },
     onSuccess: async () => {
-      alert("Account deleted.");
+      toast.success("Account deleted successfully");
       await logout();
       router.push("/");
     },
     onError: (err: any) => {
-       if (err.status === 409 || err.status === 422) {
-          setDeleteErr(err.body?.message || "You can't delete your account yet.");
-       } else {
-          setDeleteErr("An error occurred");
-       }
-       setDeleteOpen(false);
+      const msg = err.message || (err.status === 409 || err.status === 422 ? "You cannot delete your account while you own projects." : "An error occurred");
+      setDeleteErr(msg);
+      toast.error(msg);
+      setDeleteOpen(false);
     }
   });
 
   return (
-    <div className="max-w-3xl animate-in fade-in duration-500">
-      <h1 className="text-2xl font-bold mb-8">Account</h1>
+    <div className="max-w-3xl space-y-6">
+      <div className="pb-2 border-b border-border/30">
+        <h1 className="text-2xl font-bold tracking-tight text-text">Account Settings</h1>
+        <p className="text-muted text-xs mt-1">Manage user identity, security credentials, and preferences</p>
+      </div>
 
       {/* PROFILE CARD */}
-      <div className="bg-surface/30 border border-border/50 rounded-xl p-6 mb-8">
-        <h2 className="text-lg font-bold mb-6">Profile</h2>
-        <div className="flex flex-col sm:flex-row gap-6">
-          <div className="w-16 h-16 rounded-full border border-accent flex items-center justify-center text-xl font-bold bg-surface-2 shrink-0 text-text">
+      <div className="bg-surface/50 border border-border/60 rounded-xl p-5 space-y-5">
+        <div className="flex items-center gap-2 pb-2 border-b border-border/30">
+          <User size={16} className="text-accent" />
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-text">Personal Profile</h2>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div className="w-14 h-14 rounded-xl border border-accent/40 flex items-center justify-center text-lg font-bold bg-surface-2 shrink-0 text-accent">
             {initials}
           </div>
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-3 w-full text-xs">
             <div>
-              <label className="block text-sm font-bold mb-2">Name</label>
+              <label className="block font-medium text-muted mb-1.5">Full Name</label>
               <input 
                 type="text" 
                 value={name} 
                 onChange={e => setName(e.target.value)}
-                className="w-full bg-surface-2 border border-border rounded px-4 py-2 text-text outline-none focus:border-accent"
+                className="w-full bg-surface-2 border border-border/60 rounded-lg px-3.5 py-2 text-xs text-text outline-none focus:border-accent transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold mb-2">Email</label>
+              <label className="block font-medium text-muted mb-1.5">Email Address</label>
               <input 
                 type="email" 
                 value={user?.email || ""} 
                 disabled
-                className="w-full bg-surface-2 border border-border rounded px-4 py-2 text-muted opacity-50 cursor-not-allowed"
+                className="w-full bg-surface-2/40 border border-border/40 rounded-lg px-3.5 py-2 text-xs text-muted cursor-not-allowed font-mono"
               />
             </div>
-            <button 
-              onClick={() => updateMut.mutate()} 
-              disabled={!isDirty || updateMut.isPending}
-              className="px-4 py-2 bg-text text-bg rounded font-bold text-sm disabled:opacity-50 transition-opacity mt-2"
-            >
-              {updateMut.isPending ? "Saving..." : "Save changes"}
-            </button>
+            <div className="pt-1">
+              <button 
+                onClick={() => updateMut.mutate()} 
+                disabled={!isDirty || updateMut.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-bg rounded-lg font-semibold text-xs disabled:opacity-40 hover:opacity-90 transition-opacity"
+              >
+                {updateMut.isPending && <Loader2 size={13} className="animate-spin" />}
+                <span>{updateMut.isPending ? "Saving..." : "Save Changes"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* PASSWORD CARD */}
-      <div className="bg-surface/30 border border-border/50 rounded-xl p-6 mb-8">
-        <h2 className="text-lg font-bold mb-2">Password</h2>
-        <p className="text-sm text-muted mb-4">Reset your password by email.</p>
+      <div className="bg-surface/50 border border-border/60 rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2 pb-2 border-b border-border/30">
+          <KeyRound size={16} className="text-accent" />
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-text">Password & Security</h2>
+        </div>
+        <p className="text-xs text-muted leading-relaxed">
+          Receive a secure password reset link sent directly to your registered email address.
+        </p>
         
-        {resetSent && <div className="mb-4 p-3 bg-[#3FCF6D]/10 border border-[#3FCF6D]/30 text-[#3FCF6D] text-sm rounded">If an account exists, a reset email has been sent.</div>}
+        {resetSent && (
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-lg">
+            Password reset link has been dispatched to {user?.email}.
+          </div>
+        )}
         
-        <button 
-          onClick={() => resetMut.mutate()} 
-          disabled={resetCooldown > 0 || resetMut.isPending}
-          className="px-4 py-2 border border-border/50 rounded font-bold text-sm disabled:opacity-50 hover:bg-surface-2 transition-colors"
-        >
-          {resetCooldown > 0 ? `Wait ${resetCooldown}s` : resetMut.isPending ? "Sending..." : "Send reset email"}
-        </button>
+        <div>
+          <button 
+            onClick={() => resetMut.mutate()} 
+            disabled={resetCooldown > 0 || resetMut.isPending}
+            className="px-4 py-2 bg-surface-2 border border-border/60 rounded-lg font-semibold text-xs text-text hover:text-accent hover:border-accent disabled:opacity-40 transition-colors"
+          >
+            {resetCooldown > 0 ? `Wait ${resetCooldown}s before retry` : resetMut.isPending ? "Dispatching..." : "Send Reset Email"}
+          </button>
+        </div>
       </div>
 
       {/* DEMO CARD */}
       {isDemoEnabled() && getDemoSession() && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 mb-8 flex items-center justify-between">
+        <div className="bg-amber-500/5 border border-amber-500/30 rounded-xl p-5 flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-amber-500 mb-1">Demo Mode</h2>
-            <p className="text-sm text-amber-500/80">You can adjust local demo settings.</p>
+            <div className="flex items-center gap-2 text-amber-500 font-semibold text-xs uppercase tracking-wider mb-1">
+              <Wrench size={14} />
+              <span>Demo Mode Simulator Active</span>
+            </div>
+            <p className="text-xs text-muted">
+              Configure browser latency simulation, admin roles, or reset local mock data.
+            </p>
           </div>
-          <button onClick={() => setDemoOpen(true)} className="px-4 py-2 bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded font-bold text-sm hover:bg-amber-500/30 transition-colors">Demo tools</button>
+          <button 
+            onClick={() => setDemoOpen(true)} 
+            className="px-4 py-2 bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 rounded-lg font-semibold text-xs transition-colors shrink-0"
+          >
+            Configure Demo
+          </button>
         </div>
       )}
 
-      {deleteErr && <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/80 backdrop-blur-sm p-4" onClick={() => setDeleteErr("")}>
-        <div className="bg-surface border border-border/50 p-6 rounded-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
-           <h2 className="text-xl font-bold mb-4">You can't delete your account yet</h2>
-           <p className="text-sm text-muted mb-6">{deleteErr}</p>
-           <button onClick={() => setDeleteErr("")} className="w-full px-4 py-2 border border-border/50 rounded font-bold">Close</button>
+      {deleteErr && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setDeleteErr("")}>
+          <div className="bg-surface border border-border/80 p-6 rounded-xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+             <h2 className="text-base font-semibold text-red-400 mb-2">Account Cannot Be Deleted</h2>
+             <p className="text-xs text-muted mb-6 leading-relaxed">{deleteErr}</p>
+             <button onClick={() => setDeleteErr("")} className="w-full px-4 py-2 border border-border/60 rounded-lg font-medium text-xs text-text hover:bg-surface-2">
+               Close
+             </button>
+          </div>
         </div>
-      </div>}
+      )}
+
       {/* DANGER ZONE */}
-      <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6">
-        <h2 className="text-lg font-bold text-red-400 mb-2">Danger zone</h2>
-        <p className="text-sm text-red-400/80 mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
+      <div className="bg-red-500/5 border border-red-500/30 rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2 text-red-400 font-semibold text-xs uppercase tracking-wider">
+          <AlertTriangle size={15} />
+          <span>Danger Zone</span>
+        </div>
+        <p className="text-xs text-muted leading-relaxed">
+          Permanently delete your user account and all workspace memberships. All projects you own must be deleted first.
+        </p>
         <button 
           onClick={() => setDeleteOpen(true)}
-          className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 rounded font-bold text-sm transition-colors"
+          className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 rounded-lg font-semibold text-xs transition-colors"
         >
-          Delete account
+          Delete Account
         </button>
       </div>
 
       <ConfirmDialog 
         isOpen={deleteOpen} 
         onClose={() => setDeleteOpen(false)} 
-        title="Delete account"
-        message="This will immediately and permanently delete your account, projects, and databases. There is no recovery."
-        confirmText="Permanently delete account"
+        title="Permanently Delete Account?"
+        message="This action is irreversible. Your account, credentials, and access tokens will be wiped from DBaaS Cloud."
+        confirmText="Permanently Delete"
         danger={true}
         requireType="DELETE"
+        isLoading={deleteMut.isPending}
         onConfirm={() => deleteMut.mutate()}
       />
       <DemoToolsModal isOpen={demoOpen} onClose={() => setDemoOpen(false)} />

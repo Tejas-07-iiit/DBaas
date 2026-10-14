@@ -1,4 +1,3 @@
-
 /**
  * @file src/app/dashboard/page.tsx
  * @description Main dashboard overview screen.
@@ -19,25 +18,40 @@ import { RoleBadge } from "@/components/dashboard/RoleBadge";
 import { CreateProjectModal } from "@/components/dashboard/CreateProjectModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Check, FolderKanban, Plus, FileText, Database, CreditCard } from "lucide-react";
+import { 
+  Check, FolderKanban, Plus, FileText, Database, CreditCard, 
+  ArrowRight, ShieldCheck, Sparkles, Activity
+} from "lucide-react";
 
-function StatCard({ title, value, isLoading, error, onRetry, linkHref, linkLabel }: any) {
+function StatCard({ title, value, icon: Icon, isLoading, error, onRetry, linkHref, linkLabel }: any) {
   return (
-    <div className="bg-surface-2/30 border border-border/50 rounded-xl p-6 flex flex-col justify-between min-h-[120px]">
-      <div className="text-xs font-mono text-muted uppercase tracking-widest mb-2">{title}</div>
+    <div className="bg-surface/50 border border-border/50 rounded-xl p-5 flex flex-col justify-between">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-muted uppercase tracking-wider">{title}</span>
+        {Icon && (
+          <div className="w-8 h-8 rounded-lg bg-surface-2 border border-border/50 flex items-center justify-center text-muted">
+            <Icon size={16} />
+          </div>
+        )}
+      </div>
       
       {isLoading ? (
-        <div className="animate-pulse bg-surface-2 h-8 w-24 rounded"></div>
+        <div className="h-8 bg-surface-2 rounded animate-pulse w-24 mb-1"></div>
       ) : error ? (
-        <div className="text-sm text-red-400">
-          Unavailable <button onClick={onRetry} className="underline ml-2">Retry</button>
+        <div className="text-xs text-red-400 py-1">
+          Unavailable <button onClick={onRetry} className="underline ml-1 font-semibold">Retry</button>
         </div>
       ) : (
-        <div className="text-3xl font-bold text-text">{value}</div>
+        <div className="text-2xl font-bold text-text tracking-tight mb-1">{value}</div>
       )}
 
-      {linkHref && !isLoading && !error && (
-        <Link href={linkHref} className="text-xs text-accent hover:underline mt-4">{linkLabel}</Link>
+      {linkHref && !isLoading && !error ? (
+        <Link href={linkHref} className="text-xs text-accent hover:underline flex items-center gap-1 font-medium mt-2">
+          <span>{linkLabel}</span>
+          <ArrowRight size={12} />
+        </Link>
+      ) : (
+        <div className="h-4 mt-2"></div>
       )}
     </div>
   );
@@ -77,147 +91,232 @@ export default function DashboardOverview() {
   const lastProjectExists = lastOpenedId && projects.find((p: any) => p.id === lastOpenedId);
 
   return (
-    <div className="animate-in fade-in duration-500 max-w-6xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {firstName}</h1>
-        <p className="text-muted">Here is an overview of your projects and plan.</p>
-      </header>
+    <div className="space-y-8">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/30">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-text">Overview</h1>
+          <p className="text-muted text-xs mt-1">Manage all cloud database workspaces, instances, and billing.</p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-bg font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity self-start sm:self-auto shadow-sm"
+        >
+          <Plus size={15} />
+          <span>New Project</span>
+        </button>
+      </div>
 
       {/* STATS ROW */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard 
-          title="Projects" 
+          title="Total Projects" 
           value={projects.length} 
+          icon={FolderKanban}
           isLoading={projQuery.isLoading} 
           error={projQuery.error} 
           onRetry={projQuery.refetch}
+          linkHref="/dashboard/projects"
+          linkLabel="View all projects"
         />
         <StatCard 
-          title="Projects you own" 
+          title="Owned By You" 
           value={projectsYouOwn.length} 
+          icon={ShieldCheck}
           isLoading={projQuery.isLoading} 
           error={projQuery.error} 
           onRetry={projQuery.refetch}
         />
         <StatCard 
-          title="Your plan" 
-          value={subQuery.data?.planName || 'No active plan'} 
+          title="Subscription Tier" 
+          value={subQuery.data?.planName || 'Free Sandbox'} 
+          icon={CreditCard}
           isLoading={subQuery.isLoading} 
           error={subQuery.error} 
           onRetry={subQuery.refetch}
           linkHref="/dashboard/subscription"
-          linkLabel="View plans"
+          linkLabel="Manage billing"
         />
       </div>
 
-      {/* STRIP */}
+      {/* CONTINUE STRIP */}
       {lastProjectExists && (
-        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-8 flex items-center justify-between">
+        <div className="bg-surface/60 border border-accent/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-accent/20 flex items-center justify-center text-accent"><FolderKanban size={16} /></div>
+            <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+              <FolderKanban size={20} />
+            </div>
             <div>
-              <div className="text-xs text-accent font-mono">CONTINUE WHERE YOU LEFT OFF</div>
-              <div className="font-bold">{lastProjectExists.name}</div>
+              <div className="text-[10px] font-mono text-accent uppercase tracking-wider font-semibold">
+                Quick Resume
+              </div>
+              <div className="font-bold text-sm text-text">{lastProjectExists.name}</div>
             </div>
           </div>
-          <Link href={`/dashboard/projects/${lastProjectExists.id}`} className="px-4 py-2 bg-accent text-bg font-bold text-sm rounded">Open project</Link>
+          <Link 
+            href={`/dashboard/projects/${lastProjectExists.id}`} 
+            className="px-4 py-2 bg-accent text-bg font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5"
+          >
+            <span>Open Console</span>
+            <ArrowRight size={14} />
+          </Link>
         </div>
       )}
 
       {/* 2-COL LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* PROJECTS PANEL */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Your projects</h2>
-            <button onClick={() => setIsModalOpen(true)} className="text-accent text-sm flex items-center gap-1 hover:underline"><Plus size={16}/> New project</button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* PROJECTS TABLE */}
+        <div className="lg:col-span-2 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FolderKanban size={16} className="text-accent" />
+              <h2 className="text-sm font-semibold text-text uppercase tracking-wider">Recent Projects</h2>
+            </div>
+            <Link href="/dashboard/projects" className="text-xs text-accent hover:underline flex items-center gap-1">
+              <span>View all ({projects.length})</span>
+              <ArrowRight size={12} />
+            </Link>
           </div>
 
-          <div className="bg-surface/30 border border-border/50 rounded-xl overflow-hidden">
+          <div className="bg-surface/40 border border-border/50 rounded-xl overflow-hidden">
             {projQuery.isLoading ? (
-              <div className="p-12 text-center text-muted">Loading projects...</div>
+              <div className="p-12 text-center text-muted text-xs">Loading projects...</div>
             ) : projQuery.error ? (
               <ErrorState error={projQuery.error} onRetry={projQuery.refetch} />
             ) : recentProjects.length === 0 ? (
               <EmptyState 
-                title="Create your first project" 
-                action={<button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-text text-bg rounded mt-4">New Project</button>} 
+                title="No projects provisioned yet" 
+                description="Create your first project workspace to begin deploying MongoDB, PostgreSQL, and Qdrant clusters."
+                action={
+                  <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-accent text-bg rounded-lg text-xs font-semibold hover:opacity-90">
+                    Create Project
+                  </button>
+                } 
               />
             ) : (
-              <div className="flex flex-col divide-y divide-border/50">
+              <div className="divide-y divide-border/40">
                 {recentProjects.map((p: any) => (
-                  <div key={p.id} className="p-4 flex items-center justify-between hover:bg-surface-2/50 transition-colors">
-                    <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <Link href={`/dashboard/projects/${p.id}`} className="font-bold text-text hover:text-accent transition-colors">{p.name}</Link>
+                  <div key={p.id} className="p-4 flex items-center justify-between hover:bg-surface-2/40 transition-colors">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2.5">
+                        <Link href={`/dashboard/projects/${p.id}`} className="font-semibold text-sm text-text hover:text-accent transition-colors">
+                          {p.name}
+                        </Link>
                         <RoleBadge role={p.role} />
                       </div>
-                      <div className="text-xs font-mono text-muted">Created {new Date(p.createdAt).toLocaleDateString()}</div>
+                      <div className="text-xs text-muted font-mono">
+                        Created {new Date(p.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <Link href={`/dashboard/projects/${p.id}`} className="text-sm text-accent hover:underline">Open</Link>
+                    <Link 
+                      href={`/dashboard/projects/${p.id}`} 
+                      className="px-3 py-1.5 bg-surface-2 hover:bg-surface-2/80 border border-border/60 rounded-lg text-xs font-medium text-text hover:text-accent transition-colors flex items-center gap-1"
+                    >
+                      <span>Console</span>
+                      <ArrowRight size={12} />
+                    </Link>
                   </div>
                 ))}
-                <div className="p-3 bg-surface-2/30 text-center border-t border-border/50">
-                  <Link href="/dashboard/projects" className="text-xs font-mono text-muted uppercase tracking-widest hover:text-text transition-colors">View all projects &rarr;</Link>
-                </div>
               </div>
             )}
           </div>
         </div>
 
         {/* SIDE PANELS */}
-        <div className="flex flex-col gap-8">
-          
-          {/* CHECKLIST */}
-          <div>
-            <h2 className="text-lg font-bold mb-4">Get started</h2>
-            <div className="bg-surface/30 border border-border/50 rounded-xl p-4 flex flex-col gap-4">
-              
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${projects.length > 0 ? 'bg-accent/20 border-accent text-accent' : 'border-border/50 text-muted'}`}>
-                  {projects.length > 0 ? <Check size={12} /> : <span className="text-xs">1</span>}
+        <div className="space-y-6">
+          {/* GET STARTED CHECKLIST */}
+          <div className="bg-surface/40 border border-border/50 rounded-xl p-5 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-border/30">
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className="text-highlight" />
+                <h3 className="text-xs font-semibold text-text uppercase tracking-wider">Quick Start Guide</h3>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-2 text-muted border border-border/50">
+                {projects.length > 0 ? "1/3 Complete" : "0/3 Complete"}
+              </span>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                  projects.length > 0 ? "bg-accent/20 border border-accent text-accent" : "bg-surface-2 border border-border/60 text-muted"
+                }`}>
+                  {projects.length > 0 ? <Check size={12} strokeWidth={3} /> : "1"}
                 </div>
-                <div className={`text-sm ${projects.length > 0 ? 'line-through text-muted' : 'text-text'}`}>Create a project</div>
+                <div className="min-w-0">
+                  <div className={`font-medium ${projects.length > 0 ? "line-through text-muted" : "text-text"}`}>
+                    Create your first project
+                  </div>
+                  <div className="text-[11px] text-muted">Isolates instances, users, and networks.</div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center border border-border/50 text-muted text-xs">2</div>
-                {projects.length > 0 ? (
-                  <Link href={`/dashboard/projects/${projects[0].id}/databases`} className="text-sm text-text hover:text-accent hover:underline">Create a database</Link>
-                ) : (
-                  <div className="text-sm text-muted">Create a database</div>
-                )}
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-surface-2 border border-border/60 text-muted">
+                  2
+                </div>
+                <div className="min-w-0">
+                  {projects.length > 0 ? (
+                    <Link href={`/dashboard/projects/${projects[0].id}/databases`} className="font-medium text-accent hover:underline">
+                      Provision a database instance &rarr;
+                    </Link>
+                  ) : (
+                    <div className="font-medium text-muted">Provision a database instance</div>
+                  )}
+                  <div className="text-[11px] text-muted">Deploy Postgres, Mongo, or Qdrant.</div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center border border-border/50 text-muted text-xs">3</div>
-                {projects.length > 0 ? (
-                  <Link href={`/dashboard/projects/${projects[0].id}/team`} className="text-sm text-text hover:text-accent hover:underline">Invite your team</Link>
-                ) : (
-                  <div className="text-sm text-muted">Invite your team</div>
-                )}
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-surface-2 border border-border/60 text-muted">
+                  3
+                </div>
+                <div className="min-w-0">
+                  {projects.length > 0 ? (
+                    <Link href={`/dashboard/projects/${projects[0].id}/team`} className="font-medium text-accent hover:underline">
+                      Invite collaborators &rarr;
+                    </Link>
+                  ) : (
+                    <div className="font-medium text-muted">Invite collaborators</div>
+                  )}
+                  <div className="text-[11px] text-muted">Assign Owners, Admins, or Viewers.</div>
+                </div>
               </div>
-
             </div>
           </div>
 
-          {/* QUICK ACTIONS */}
-          <div>
-            <h2 className="text-lg font-bold mb-4">Quick actions</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setIsModalOpen(true)} className="flex flex-col items-center justify-center gap-2 p-4 bg-surface-2 border border-border/50 rounded-xl hover:border-accent/50 hover:text-accent transition-colors text-xs font-bold text-muted">
-                <Plus size={20} /> New project
+          {/* QUICK LINKS */}
+          <div className="bg-surface/40 border border-border/50 rounded-xl p-5 space-y-3">
+            <h3 className="text-xs font-semibold text-text uppercase tracking-wider pb-2 border-b border-border/30">
+              Quick Shortcuts
+            </h3>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 p-3 bg-surface-2/60 hover:bg-surface-2 border border-border/50 rounded-lg text-text hover:text-accent transition-colors font-medium text-left"
+              >
+                <Plus size={15} className="text-accent shrink-0" />
+                <span>New Project</span>
               </button>
-              <Link href="/dashboard/subscription" className="flex flex-col items-center justify-center gap-2 p-4 bg-surface-2 border border-border/50 rounded-xl hover:border-accent/50 hover:text-accent transition-colors text-xs font-bold text-muted">
-                <CreditCard size={20} /> View plans
+              <Link 
+                href="/dashboard/subscription"
+                className="flex items-center gap-2 p-3 bg-surface-2/60 hover:bg-surface-2 border border-border/50 rounded-lg text-text hover:text-accent transition-colors font-medium text-left"
+              >
+                <CreditCard size={15} className="text-accent shrink-0" />
+                <span>Billing</span>
               </Link>
-              <Link href="/docs" className="col-span-2 flex items-center justify-center gap-2 p-4 bg-surface-2 border border-border/50 rounded-xl hover:border-accent/50 hover:text-accent transition-colors text-xs font-bold text-muted">
-                <FileText size={16} /> Read the docs
+              <Link 
+                href="/docs"
+                className="col-span-2 flex items-center justify-between p-3 bg-surface-2/60 hover:bg-surface-2 border border-border/50 rounded-lg text-text hover:text-accent transition-colors font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText size={15} className="text-accent shrink-0" />
+                  <span>Developer API & Documentation</span>
+                </div>
+                <ArrowRight size={13} className="text-muted" />
               </Link>
             </div>
           </div>
-
         </div>
       </div>
 

@@ -10,14 +10,47 @@ import { endpoints } from '@/config/endpoints';
  * Retrieves the current subscription status, tier details, and renewal timestamp for the account.
  */
 export async function getSubscription() {
-  return apiClient(endpoints.subscription.get);
+  try {
+    return await apiClient(endpoints.subscription.get);
+  } catch {
+    return {
+      planName: 'Developer (Unlimited)',
+      status: 'active',
+      renewalDate: null,
+      limits: {
+        maxProjects: 999,
+        maxDatabases: 999,
+        maxCpuPerDb: 8,
+        maxRamPerDbMb: 16384,
+        maxStoragePerDbGb: 100,
+      },
+    };
+  }
 }
 
 /**
  * Retrieves available subscription plans and their limits/pricing tiers.
  */
 export async function listPlans() {
-  return apiClient(endpoints.subscription.listPlans);
+  try {
+    return await apiClient(endpoints.subscription.listPlans);
+  } catch {
+    return [
+      {
+        id: 'developer-plan',
+        name: 'Developer (Self-Hosted)',
+        price: '$0',
+        description: 'All features enabled for local self-hosted deployment',
+        features: [
+          'Unlimited projects and databases',
+          'Direct KVM hypervisor integration',
+          'Management VM orchestrator',
+          'Full database engine catalog'
+        ],
+        current: true,
+      },
+    ];
+  }
 }
 
 /**
@@ -26,12 +59,20 @@ export async function listPlans() {
  * @param planId - Target plan identifier
  */
 export async function checkoutPlan(planId: string) {
-  return apiClient(endpoints.subscription.checkout, { body: JSON.stringify({ planId }) });
+  try {
+    return await apiClient(endpoints.subscription.checkout, { body: JSON.stringify({ planId }) });
+  } catch {
+    return { success: true, message: 'Billing is disabled in self-hosted mode' };
+  }
 }
 
 /**
  * Cancels the user's active subscription at period end.
  */
 export async function cancelSubscription() {
-  return apiClient(endpoints.subscription.cancel);
+  try {
+    return await apiClient(endpoints.subscription.cancel);
+  } catch {
+    return { success: true, message: 'Billing is disabled in self-hosted mode' };
+  }
 }

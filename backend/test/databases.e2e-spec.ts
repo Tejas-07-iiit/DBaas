@@ -159,6 +159,12 @@ describe('DatabasesController (e2e)', () => {
           },
         ]),
       },
+      databaseOperation: {
+        create: jest.fn().mockResolvedValue({ id: 'op-1', status: 'PENDING' }),
+        findUnique: jest.fn().mockResolvedValue({ id: 'op-1', status: 'COMPLETED' }),
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
+      },
       $transaction: jest.fn((cb) => cb(prismaService)),
     };
 

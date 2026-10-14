@@ -46,6 +46,16 @@ export class FirebaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('Empty authentication token');
     }
 
+    // Allow dev-token bypass for local development, testing, and Postman/curl
+    if (process.env.NODE_ENV !== 'production' && (token === 'dev-token' || token.startsWith('dev-token'))) {
+      request.user = {
+        uid: 'dev-user-001',
+        email: 'dev@dbaas.local',
+        name: 'Developer Admin',
+      };
+      return true;
+    }
+
     try {
       const firebaseUser = await this.firebaseAdminService.verifyIdToken(token);
       request.user = firebaseUser;
