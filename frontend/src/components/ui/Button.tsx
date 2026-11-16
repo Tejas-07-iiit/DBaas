@@ -11,8 +11,8 @@ export function Button({ variant = "primary", size = "md", className = "", href,
   const baseStyle = "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-center";
   
   const variants = {
-    primary: "bg-accent text-[#05080F] hover:shadow-[0_0_20px_rgba(25,227,193,0.3)]",
-    outline: "border border-border bg-transparent hover:border-text text-text"
+    primary: "bg-primary hover:bg-primary-hover text-white font-semibold shadow-xs hover:shadow-md transition-all",
+    outline: "border border-border bg-transparent hover:bg-surface-elevated hover:border-border-bright text-text"
   };
   
   const sizes = {

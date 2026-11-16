@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/errors";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
+import { confirmPasswordReset } from "firebase/auth";
+import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth/authErrors";
 
 type ResetForm = z.infer<typeof resetPasswordSchema>;
 
@@ -60,7 +63,12 @@ function ResetContent() {
     setLoading(true);
     setGlobalError("");
     try {
-      await authApi.resetPassword({ token, password: data.password });
+      const oobCode = searchParams.get('oobCode');
+      if (isFirebaseConfigured && oobCode) {
+        await confirmPasswordReset(auth, oobCode, data.password);
+      } else {
+        await authApi.resetPassword({ token, password: data.password });
+      }
       router.replace('/login?reset=1');
     } catch (err: any) {
       if (err instanceof ApiError) {
@@ -70,7 +78,8 @@ function ResetContent() {
           setGlobalError(err.message);
         }
       } else {
-        setGlobalError("An unexpected error occurred");
+        const friendly = getFriendlyAuthErrorMessage(err);
+        setGlobalError(friendly || "This reset link is invalid or has expired.");
       }
     } finally {
       setLoading(false);

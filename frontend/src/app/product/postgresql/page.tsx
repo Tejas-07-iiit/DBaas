@@ -134,7 +134,7 @@ function PostgresPlayground() {
   return (
     <div className="grid lg:grid-cols-2 gap-8">
       {/* Editor & Results */}
-      <div className="bg-[#05080F] rounded-2xl border border-[var(--engine)]/30 p-6 flex flex-col h-[600px] shadow-[0_0_30px_rgba(76,141,255,0.1)]">
+      <div className="bg-surface rounded-2xl border border-[var(--engine)]/30 p-6 flex flex-col h-[600px] shadow-[0_0_30px_rgba(76,141,255,0.1)]">
         <div className="flex justify-between items-center mb-4">
           <select 
             value={activeQuery}
@@ -146,7 +146,7 @@ function PostgresPlayground() {
           <button 
             onClick={handleRun}
             disabled={executing || pendingTx}
-            className="bg-[var(--engine)] text-[#05080F] px-4 py-1.5 rounded-lg text-sm font-bold hover:shadow-[0_0_15px_var(--engine)] disabled:opacity-50"
+            className="bg-[var(--engine)] text-white font-semibold px-4 py-1.5 rounded-lg text-sm hover:shadow-[0_0_15px_var(--engine)] disabled:opacity-50"
           >
             {executing ? "Executing..." : "Run"}
           </button>
@@ -282,7 +282,7 @@ function VisualAcid() {
 
   return (
     <div className="w-full flex flex-col gap-4 font-mono text-xs">
-      <div className="flex justify-between items-center p-3 rounded-lg border border-border bg-[#05080F]">
+      <div className="flex justify-between items-center p-3 rounded-lg border border-border bg-surface">
         <div className="text-muted">Account A</div>
         <div className={`font-bold transition-colors ${step === 1 || step === 2 ? "text-red-400" : "text-text"}`}>
           ${step === 1 || step === 2 ? "900" : "1000"}
@@ -294,7 +294,7 @@ function VisualAcid() {
         {step === 2 && <span className="text-red-400">ERROR ON B!</span>}
         {step === 3 && <span className="text-yellow-400">ROLLBACK;</span>}
       </div>
-      <div className="flex justify-between items-center p-3 rounded-lg border border-border bg-[#05080F]">
+      <div className="flex justify-between items-center p-3 rounded-lg border border-border bg-surface">
         <div className="text-muted">Account B</div>
         <div className="font-bold text-text">$500</div>
       </div>
@@ -317,7 +317,7 @@ function VisualExtensions() {
         <button 
           key={ext.id}
           onClick={() => setActive(ext.id)}
-          className={`p-3 rounded-lg border text-left transition-colors flex flex-col gap-1 ${active === ext.id ? "bg-[var(--engine)]/10 border-[var(--engine)]" : "bg-[#05080F] border-border hover:border-text"}`}
+          className={`p-3 rounded-lg border text-left transition-colors flex flex-col gap-1 ${active === ext.id ? "bg-[var(--engine)]/10 border-[var(--engine)]" : "bg-surface border-border hover:border-text"}`}
         >
           <div className={`font-bold font-mono text-sm ${active === ext.id ? "text-[var(--engine)]" : "text-text"}`}>{ext.id}</div>
           <div className="text-xs text-muted">{ext.desc}</div>
@@ -358,7 +358,7 @@ function VisualPooling() {
         </svg>
       </div>
       
-      <div className="w-24 bg-[#05080F] border border-[var(--engine)]/50 p-4 rounded-lg flex flex-col items-center shadow-[0_0_15px_rgba(76,141,255,0.1)] z-10">
+      <div className="w-24 bg-surface border border-[var(--engine)]/50 p-4 rounded-lg flex flex-col items-center shadow-[0_0_15px_rgba(76,141,255,0.1)] z-10">
         <div className="text-[10px] font-bold text-[var(--engine)] mb-2">PgBouncer</div>
         <div className="flex gap-2">
            <div className="w-2 h-8 bg-[var(--engine)] rounded-full" />
@@ -373,7 +373,7 @@ function VisualPitR() {
   const [val, setVal] = useState(50);
   return (
     <div className="w-full flex flex-col justify-center items-center">
-      <div className="bg-[#05080F] px-4 py-2 rounded font-mono text-[var(--engine)] text-sm mb-6 border border-border">
+      <div className="bg-surface px-4 py-2 rounded font-mono text-[var(--engine)] text-sm mb-6 border border-border">
         Restore to: {val > 90 ? "Now" : `Sep ${Math.floor(val/4) + 1} 14:00`}
       </div>
       <input 

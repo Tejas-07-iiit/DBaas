@@ -72,7 +72,7 @@ export default function ProjectSettings({
       </div>
 
       {/* GENERAL CONFIGURATION */}
-      <div className="bg-surface/50 border border-border/60 rounded-xl p-5 space-y-4">
+      <div className="bg-surface/70 border border-border/70 rounded-2xl p-6 space-y-4 shadow-sm">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-text pb-2 border-b border-border/30">
           General Information
         </h2>
@@ -85,11 +85,11 @@ export default function ProjectSettings({
                 type="text"
                 readOnly
                 value={projectId}
-                className="flex-1 bg-surface-2/60 border border-border/60 rounded-lg px-3 py-2 text-xs font-mono text-muted cursor-not-allowed"
+                className="flex-1 bg-surface-2/60 border border-border/60 rounded-xl px-3.5 py-2 text-xs font-mono text-muted cursor-not-allowed"
               />
               <button 
                 onClick={handleCopyId}
-                className="px-3 py-2 bg-surface-2 border border-border/60 rounded-lg text-xs font-medium text-text hover:text-accent transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-surface-2 border border-border/60 rounded-xl text-xs font-medium text-text hover:text-accent transition-colors flex items-center gap-1.5"
               >
                 {copied ? <Check size={14} className="text-accent" /> : <Copy size={14} />}
                 <span>{copied ? "Copied" : "Copy"}</span>
@@ -103,7 +103,7 @@ export default function ProjectSettings({
               type="text"
               defaultValue={data.name}
               disabled={data.role === "Member"}
-              className="w-full bg-surface-2 border border-border/60 rounded-lg px-3.5 py-2 text-xs text-text outline-none focus:border-accent disabled:opacity-40 transition-colors"
+              className="w-full bg-surface-2 border border-border/60 rounded-xl px-3.5 py-2 text-xs text-text outline-none focus:border-accent disabled:opacity-40 transition-colors"
             />
           </div>
 
@@ -113,7 +113,7 @@ export default function ProjectSettings({
               defaultValue={data.description}
               disabled={data.role === "Member"}
               rows={3}
-              className="w-full bg-surface-2 border border-border/60 rounded-lg px-3.5 py-2 text-xs text-text outline-none focus:border-accent disabled:opacity-40 transition-colors resize-none leading-relaxed"
+              className="w-full bg-surface-2 border border-border/60 rounded-xl px-3.5 py-2 text-xs text-text outline-none focus:border-accent disabled:opacity-40 transition-colors resize-none leading-relaxed"
             />
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function ProjectSettings({
           <button
             disabled={data.role === "Member"}
             onClick={() => toast.success("Project settings saved successfully")}
-            className="px-4 py-2 bg-accent text-bg font-semibold rounded-lg text-xs disabled:opacity-40 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-xl text-xs disabled:opacity-40 transition-colors shadow-sm"
           >
             Save Changes
           </button>
@@ -130,7 +130,7 @@ export default function ProjectSettings({
       </div>
 
       {/* DANGER ZONE */}
-      <div className="bg-red-500/5 border border-red-500/30 rounded-xl p-5 space-y-3">
+      <div className="bg-red-500/5 border border-red-500/30 rounded-2xl p-6 space-y-3">
         <div className="flex items-center gap-2 text-red-400 font-semibold text-xs uppercase tracking-wider">
           <AlertTriangle size={15} />
           <span>Danger Zone</span>
@@ -142,7 +142,7 @@ export default function ProjectSettings({
           <button
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={!isOwner || delMut.isPending}
-            className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded-lg font-semibold text-xs disabled:opacity-30 transition-colors"
+            className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded-xl font-semibold text-xs disabled:opacity-30 transition-colors"
           >
             Delete Project Workspace
           </button>

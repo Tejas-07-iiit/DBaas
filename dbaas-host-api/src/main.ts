@@ -33,7 +33,7 @@ async function bootstrap() {
   // Restrict payload size
   app.use(json({ limit: '1mb' }));
 
-  const bindHost = process.env.BIND_HOST || '10.50.0.2';
+  const bindHost = process.env.BIND_HOST || '192.168.122.1';
   const port = parseInt(process.env.PORT || '8081', 10);
 
   await app.listen(port, bindHost);

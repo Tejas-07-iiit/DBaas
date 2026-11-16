@@ -20,8 +20,8 @@ export const APPROVED_VM_PROFILES: Record<string, VmProfileDefinition> = {
     name: 'Nano Database VM',
     cpuCores: 1,
     ramMb: 1024,
-    storageMb: 5120, // 5 GB
-    description: '1 vCPU, 1 GB RAM, 5 GB SSD storage. Suitable for development/test workloads.',
+    storageMb: 10240, // 10 GB
+    description: '1 vCPU, 1 GB RAM, 10 GB SSD storage. Suitable for development/test workloads.',
   },
   'db.small': {
     id: 'db.small',

@@ -60,7 +60,7 @@ export default function Quiz() {
     if (scores.pg === max) {
       result = { 
         name: "PostgreSQL", 
-        color: "#4C8DFF", 
+        color: "#8B5CF6", 
         reason: "Your needs strongly align with strict relational schemas, ACID compliance, and complex queries." 
       };
     } else if (scores.mongo === max) {

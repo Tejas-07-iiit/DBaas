@@ -12,6 +12,8 @@ import { HealthModule } from './health/health.module';
 import { BullModule } from './bull/bull.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { CommonModule } from './common/common.module';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { EmailModule } from './email/email.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
@@ -28,8 +30,10 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
     UsersModule,
     ProjectsModule,
     TeamModule,
+    EmailModule,
     DatabaseEnginesModule,
     DatabasesModule,
+    SubscriptionModule,
     HealthModule,
     BullModule,
   ],

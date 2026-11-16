@@ -55,6 +55,6 @@ If the backend path for an API changes:
 ## Intentionally excluded endpoints
 The following backend endpoints are intentionally NOT included in the frontend code:
 - `/internal/*` (INFRA-01..06)
-- `/webhooks/stripe` (BILL-05)
+- `/webhooks/razorpay` (BILL-05)
 
 The browser must never call these directly.

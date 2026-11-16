@@ -37,7 +37,7 @@ export default function UsagePage({ params }: { params: Promise<{ projectId: str
   const Bar = ({ label, used, limit, icon: Icon, unit }: { label: string, used: number, limit: number | undefined, icon: any, unit?: string }) => {
     if (!limit) {
       return (
-        <div className="bg-surface/50 p-5 border border-border/60 rounded-xl space-y-2">
+        <div className="bg-surface/70 p-5 border border-border/70 rounded-2xl space-y-2 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-muted">
               <Icon size={16} className="text-accent" />
@@ -58,7 +58,7 @@ export default function UsagePage({ params }: { params: Promise<{ projectId: str
     else if (pct >= 80) color = 'bg-amber-500';
 
     return (
-      <div className="bg-surface/50 p-5 border border-border/60 rounded-xl space-y-3">
+      <div className="bg-surface/70 p-5 border border-border/70 rounded-2xl space-y-3 shadow-sm">
         <div className="flex justify-between items-center text-xs">
           <div className="flex items-center gap-2">
             <Icon size={15} className="text-accent" />
@@ -95,14 +95,14 @@ export default function UsagePage({ params }: { params: Promise<{ projectId: str
         <Bar label="Persistent NVMe Storage" used={allocated.storageGb} limit={limits.storageGb} icon={HardDrive} unit="GB" />
       </div>
 
-      <div className="p-5 bg-surface/50 border border-border/60 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-5 bg-surface/70 border border-border/70 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
         <div>
           <h3 className="font-semibold text-sm text-text">Need higher database quotas?</h3>
           <p className="text-xs text-muted mt-0.5">Scale hardware capacity, memory pools, and maximum instance counts.</p>
         </div>
         <Link 
           href="/dashboard/subscription"
-          className="px-4 py-2 bg-accent text-bg font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 shrink-0"
+          className="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-medium text-xs rounded-xl transition-colors shadow-sm flex items-center gap-1.5 shrink-0"
         >
           <span>Upgrade Tier</span>
           <ArrowRight size={13} />

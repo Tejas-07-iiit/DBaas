@@ -8,3 +8,4 @@ export { AuthGuard } from "./AuthGuard";
 export { GuestOnly } from "./GuestOnly";
 export { tokenStorage } from "./tokenStorage";
 export { getSafeRedirect } from "./safeRedirect";
+export { getFriendlyAuthErrorMessage } from "./authErrors";

@@ -6,41 +6,155 @@
 @import "tailwindcss";
 
 :root {
-  --bg:        #05080F;
-  --surface:   #0C121D;
-  --surface-2: #131B2A;
-  --border:    rgba(130, 160, 200, 0.16);
-  --border-bright: rgba(130, 160, 200, 0.32);
-  --text:      #E6EDF7;
-  --muted:     #8A97AB;
-  --accent:    #19E3C1;
-  --accent-glow: rgba(25, 227, 193, 0.18);
-  --highlight: #FFB224;
-  --mongo:    #3FCF6D;
-  --postgres: #4C8DFF;
-  --qdrant:   #FF4D8D;
-  /* Fonts come from next/font, these are overridden below */
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body:    system-ui, -apple-system, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
-  /* Connect next/font variables */
-  --font-heading: var(--loaded-heading, 'Space Grotesk', sans-serif);
+  --background:         #101412;
+  --sidebar-background: #151B19;
+  --surface:            #1A221E;
+  --surface-elevated:   #193D30;
+  --surface-hover:      #202B25;
+  --border:             #25312A;
+  --border-bright:      #38483F;
+
+  --foreground:           #F2F5F2;
+  --foreground-secondary: #C0C9C2;
+  --foreground-muted:     #92A197;
+
+  --primary:        #0D966B;
+  --primary-hover:  #0FAD7C;
+  --primary-light:  #38C995;
+  --primary-subtle: rgba(56, 201, 149, 0.12);
+
+  --success: #38C995;
+  --warning: #E9AD45;
+  --danger:  #EF6262;
+  --neutral: #858F88;
+
+  /* Aliases for backwards compatibility */
+  --bg:             var(--background);
+  --surface-2:      var(--surface-elevated);
+  --surface-3:      var(--surface-hover);
+  --text:           var(--foreground);
+  --text-secondary: var(--foreground-secondary);
+  --muted:          var(--foreground-muted);
+  --accent:         var(--primary-light);
+  --accent-hover:   var(--primary-hover);
+  --accent-glow:    var(--primary-subtle);
+  --highlight:      var(--warning);
+
+  /* Engine tokens (NO BLUE) */
+  --mongo:     #38C995;
+  --postgres:  #A78BFA;
+  --qdrant:    #F43F5E;
+
+  --font-heading: var(--loaded-heading, var(--font-inter, 'Inter', sans-serif));
+  --font-body:    var(--font-inter, 'Inter', system-ui, -apple-system, sans-serif);
   --font-mono:    var(--loaded-mono, 'JetBrains Mono', monospace);
-  --nav-h: 68px;
+  --nav-h: 60px;
+  --nav-bg: rgba(16, 20, 18, 0.75);
+  --nav-bg-scrolled: rgba(16, 20, 18, 0.95);
+}
+
+html[data-theme="light"],
+html.light {
+  --background:         #F7F9F7;
+  --sidebar-background: #F0F4F1;
+  --surface:            #FFFFFF;
+  --surface-elevated:   #E1F3E9;
+  --surface-hover:      #E9F0EB;
+  --border:             #DDE5DF;
+  --border-bright:      #C4D2C7;
+
+  --foreground:           #17231D;
+  --foreground-secondary: #425248;
+  --foreground-muted:     #718078;
+
+  --primary:        #0D966B;
+  --primary-hover:  #097754;
+  --primary-light:  #0D966B;
+  --primary-subtle: rgba(13, 150, 107, 0.12);
+
+  --success: #0D966B;
+  --warning: #D97706;
+  --danger:  #DC2626;
+  --neutral: #64748B;
+
+  /* Engine tokens on light */
+  --mongo:     #0D966B;
+  --postgres:  #7C3AED;
+  --qdrant:    #E11D48;
+
+  --nav-bg: rgba(247, 249, 247, 0.85);
+  --nav-bg-scrolled: rgba(255, 255, 255, 0.95);
+}
+
+html[data-theme="dark"],
+html.dark {
+  --background:         #101412;
+  --sidebar-background: #151B19;
+  --surface:            #1A221E;
+  --surface-elevated:   #193D30;
+  --surface-hover:      #202B25;
+  --border:             #25312A;
+  --border-bright:      #38483F;
+
+  --foreground:           #F2F5F2;
+  --foreground-secondary: #C0C9C2;
+  --foreground-muted:     #92A197;
+
+  --primary:        #0D966B;
+  --primary-hover:  #0FAD7C;
+  --primary-light:  #38C995;
+  --primary-subtle: rgba(56, 201, 149, 0.12);
+
+  --success: #38C995;
+  --warning: #E9AD45;
+  --danger:  #EF6262;
+  --neutral: #858F88;
+
+  --mongo:     #38C995;
+  --postgres:  #A78BFA;
+  --qdrant:    #F43F5E;
+
+  --nav-bg: rgba(16, 20, 18, 0.75);
+  --nav-bg-scrolled: rgba(16, 20, 18, 0.95);
 }
 
 @theme inline {
-  --color-bg:        var(--bg);
-  --color-surface:   var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-border:    var(--border);
-  --color-text:      var(--text);
-  --color-muted:     var(--muted);
-  --color-accent:    var(--accent);
-  --color-highlight: var(--highlight);
-  --color-mongo:     var(--mongo);
-  --color-postgres:  var(--postgres);
-  --color-qdrant:    var(--qdrant);
+  --color-background:         var(--background);
+  --color-sidebar:            var(--sidebar-background);
+  --color-surface:            var(--surface);
+  --color-surface-elevated:   var(--surface-elevated);
+  --color-surface-hover:      var(--surface-hover);
+  --color-border:             var(--border);
+  --color-border-bright:      var(--border-bright);
+
+  --color-foreground:           var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-foreground-muted:     var(--foreground-muted);
+
+  --color-primary:        var(--primary);
+  --color-primary-hover:  var(--primary-hover);
+  --color-primary-light:  var(--primary-light);
+  --color-primary-subtle: var(--primary-subtle);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger:  var(--danger);
+  --color-neutral: var(--neutral);
+
+  /* Aliases */
+  --color-bg:             var(--background);
+  --color-surface-2:      var(--surface-elevated);
+  --color-surface-3:      var(--surface-hover);
+  --color-text:           var(--foreground);
+  --color-text-secondary: var(--foreground-secondary);
+  --color-muted:          var(--foreground-muted);
+  --color-accent:         var(--primary-light);
+  --color-accent-hover:   var(--primary-hover);
+  --color-highlight:      var(--warning);
+  --color-mongo:          var(--mongo);
+  --color-postgres:       var(--postgres);
+  --color-qdrant:         var(--qdrant);
+
   --font-sans: var(--font-body);
   --font-mono: var(--font-mono);
   
@@ -55,6 +169,8 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html { color-scheme: dark; scroll-behavior: smooth; }
+  html[data-theme="light"], html.light { color-scheme: light; }
+  html[data-theme="dark"], html.dark { color-scheme: dark; }
 
   body {
     background-color: var(--bg);

@@ -27,11 +27,16 @@ describe('UsersService', () => {
         findUnique: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        delete: jest.fn(),
+      },
+      projectMember: {
+        deleteMany: jest.fn(),
       },
     } as unknown as PrismaService;
 
     service = new UsersService(prisma);
   });
+
 
   describe('findOrCreateFromFirebase', () => {
     const firebaseUser: FirebaseUser = {
@@ -96,6 +101,50 @@ describe('UsersService', () => {
       await expect(
         service.updateProfile('non-existent-uid', { name: 'New' }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('deleteAccount', () => {
+    const firebaseUser: FirebaseUser = {
+      uid: 'firebase-uid-123',
+      email: 'test@example.com',
+      name: 'Test User',
+    };
+
+    it('should delete user if user owns no projects', async () => {
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        ...mockDbUser,
+        ownedProjects: [],
+      });
+      (prisma.projectMember.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+      (prisma.user.delete as jest.Mock).mockResolvedValue(mockDbUser);
+
+      await expect(service.deleteAccount(firebaseUser)).resolves.toBeUndefined();
+
+      expect(prisma.projectMember.deleteMany).toHaveBeenCalledWith({
+        where: { userId: mockDbUser.id },
+      });
+      expect(prisma.user.delete).toHaveBeenCalledWith({
+        where: { id: mockDbUser.id },
+      });
+    });
+
+    it('should throw ConflictException if user owns projects', async () => {
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        ...mockDbUser,
+        ownedProjects: [{ id: 'proj-1', name: 'Project 1' }],
+      });
+
+      await expect(service.deleteAccount(firebaseUser)).rejects.toThrow(
+        'You cannot delete your account while you own projects',
+      );
+      expect(prisma.user.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if user not found', async () => {
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.deleteAccount(firebaseUser)).rejects.toThrow(NotFoundException);
     });
   });
 

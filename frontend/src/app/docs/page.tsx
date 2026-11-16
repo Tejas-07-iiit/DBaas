@@ -162,7 +162,7 @@ export default function DocsLandingPage() {
       <Section className="py-24">
         <Container>
           <SectionHeader title="Quickstart" subtitle="Get your first database up and running in minutes." />
-          <Card className="p-0 overflow-hidden border-border/50 bg-[#05080F]">
+          <Card className="p-0 overflow-hidden border-border/50 bg-surface">
             <div className="grid lg:grid-cols-2">
               <div className="p-8 border-b lg:border-b-0 lg:border-r border-border/50 flex flex-col">
                 <div className="flex flex-col gap-2 mb-8">
@@ -182,7 +182,7 @@ export default function DocsLandingPage() {
                   <div className="flex gap-2">
                     {[
                       { id: "mongodb", label: "MongoDB", c: "#3FCF6D" },
-                      { id: "postgresql", label: "PostgreSQL", c: "#4C8DFF" },
+                      { id: "postgresql", label: "PostgreSQL", c: "#8B5CF6" },
                       { id: "qdrant", label: "Qdrant", c: "#FF4D8D" }
                     ].map(e => (
                       <button 
@@ -249,14 +249,14 @@ export default function DocsLandingPage() {
                     onClick={() => setApiIdx(i)}
                     className={`flex items-center gap-3 px-3 py-2 text-left text-sm font-mono rounded transition-colors ${apiIdx === i ? "bg-bg border border-border/50" : "hover:bg-bg/50 border border-transparent"}`}
                   >
-                    <span className={`w-12 text-[10px] px-1 py-0.5 rounded text-center font-bold ${api.method === 'GET' ? 'bg-blue-500/20 text-blue-400' : api.method === 'POST' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                    <span className={`w-12 text-[10px] px-1 py-0.5 rounded text-center font-bold ${api.method === 'GET' ? 'bg-violet-500/20 text-violet-400' : api.method === 'POST' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                       {api.method}
                     </span>
                     <span className={`truncate ${apiIdx === i ? "text-text" : "text-muted"}`}>{api.path}</span>
                   </button>
                 ))}
               </div>
-              <div className="lg:col-span-2 flex flex-col bg-[#05080F]">
+              <div className="lg:col-span-2 flex flex-col bg-surface">
                 <div className="p-6 border-b border-border/50 flex-1">
                   <div className="flex justify-between items-center mb-4">
                     <div className="text-xs font-mono text-muted uppercase">Request</div>
@@ -298,7 +298,7 @@ export default function DocsLandingPage() {
                   <span className="text-2xl">{sdk.icon}</span>
                   <span className="font-bold">{sdk.name}</span>
                 </div>
-                <div className="bg-[#05080F] border border-border/50 p-2 rounded text-xs font-mono flex justify-between items-center group cursor-copy" onClick={() => navigator.clipboard.writeText(sdk.cmd)}>
+                <div className="bg-surface-elevated/40 border border-border/50 p-2 rounded text-xs font-mono flex justify-between items-center group cursor-copy" onClick={() => navigator.clipboard.writeText(sdk.cmd)}>
                   <span className="text-accent truncate">{sdk.cmd}</span>
                   <Copy size={12} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0" />
                 </div>

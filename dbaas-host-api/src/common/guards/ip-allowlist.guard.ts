@@ -21,7 +21,7 @@ export class IpAllowlistGuard implements CanActivate {
     const normalizedIp = rawIp.replace(/^.*:/, '');
 
     const allowedIpsStr =
-      process.env.ALLOWED_CLIENT_IPS || '10.50.0.7,127.0.0.1,localhost';
+      process.env.ALLOWED_CLIENT_IPS || '192.168.122.7,192.168.122.1,127.0.0.1,localhost';
     const allowedIps = allowedIpsStr.split(',').map((ip) => ip.trim());
 
     const isAllowed =

@@ -41,7 +41,7 @@ export class MockInfrastructureProvider implements IInfrastructureProvider {
   private readonly logger = new Logger(MockInfrastructureProvider.name);
 
   private readonly vms = new Map<string, MockVmRecord>();
-  private nextIpIndex = 11; // 10.50.0.11 upwards
+  private nextIpIndex = 11; // 192.168.122.11 upwards
   private failureMode: SimulatedFailureMode = null;
 
   /**
@@ -88,7 +88,7 @@ export class MockInfrastructureProvider implements IInfrastructureProvider {
     }
 
     const vmId = `vm-${request.engineType.toLowerCase().slice(0, 4)}-${request.databaseId.slice(0, 8)}`;
-    const internalIp = request.network.internalIp || `10.50.0.${this.nextIpIndex++}`;
+    const internalIp = request.network.internalIp || `192.168.122.${this.nextIpIndex++}`;
     const port = this.resolveDefaultPort(request.engineType);
 
     const record: MockVmRecord = {
@@ -231,7 +231,7 @@ export class MockInfrastructureProvider implements IInfrastructureProvider {
     engineType: DatabaseType,
   ): Promise<VmConnectionMetadata> {
     const vm = this.vms.get(vmId);
-    const host = vm ? vm.internalIp : '10.50.0.11';
+    const host = vm ? vm.internalIp : '192.168.122.11';
     const port = vm ? vm.port : this.resolveDefaultPort(engineType);
     const databaseName = 'dbaas_main';
 

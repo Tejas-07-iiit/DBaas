@@ -1,28 +1,48 @@
 /**
  * @file src/lib/api/subscription.ts
- * @description API service module for billing, subscription lifecycle, and plan tiers.
+ * @description API service module for billing, Razorpay subscription lifecycle, and plan tiers.
  */
 
 import { apiClient } from './client';
 import { endpoints } from '@/config/endpoints';
 
+export interface VerifyPaymentPayload {
+  projectId: string;
+  razorpayPaymentId: string;
+  razorpaySubscriptionId: string;
+  razorpaySignature: string;
+}
+
 /**
- * Retrieves the current subscription status, tier details, and renewal timestamp for the account.
+ * Retrieves the current subscription status, tier details, quotas, and renewal timestamp for the project.
  */
-export async function getSubscription() {
+export async function getSubscription(projectId?: string) {
   try {
-    return await apiClient(endpoints.subscription.get);
-  } catch {
+    const query = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+    const r: any = await apiClient({
+      path: `${endpoints.subscription.get.path}${query}`,
+      method: 'GET',
+    });
+    return r.data || r;
+  } catch (err: any) {
     return {
-      planName: 'Developer (Unlimited)',
+      planName: 'Developer Sandbox (Free)',
+      tier: 'FREE',
+      interval: 'monthly',
       status: 'active',
-      renewalDate: null,
+      isOwner: true,
+      renewalDate: new Date(Date.now() + 30 * 86400000).toISOString(),
       limits: {
-        maxProjects: 999,
-        maxDatabases: 999,
-        maxCpuPerDb: 8,
-        maxRamPerDbMb: 16384,
-        maxStoragePerDbGb: 100,
+        maxDatabases: 2,
+        maxCpuCores: 4,
+        maxRamMb: 4096,
+        maxStorageMb: 20480,
+      },
+      usage: {
+        databaseCount: 0,
+        cpuUsed: 0,
+        ramUsedMb: 0,
+        storageUsedMb: 0,
       },
     };
   }
@@ -32,47 +52,53 @@ export async function getSubscription() {
  * Retrieves available subscription plans and their limits/pricing tiers.
  */
 export async function listPlans() {
-  try {
-    return await apiClient(endpoints.subscription.listPlans);
-  } catch {
-    return [
-      {
-        id: 'developer-plan',
-        name: 'Developer (Self-Hosted)',
-        price: '$0',
-        description: 'All features enabled for local self-hosted deployment',
-        features: [
-          'Unlimited projects and databases',
-          'Direct KVM hypervisor integration',
-          'Management VM orchestrator',
-          'Full database engine catalog'
-        ],
-        current: true,
-      },
-    ];
-  }
+  const r: any = await apiClient(endpoints.subscription.listPlans);
+  return r.data || r;
 }
 
 /**
  * Initiates checkout for upgrading or changing a subscription tier.
- * Returns a Stripe checkout URL or confirmation payload.
- * @param planId - Target plan identifier
+ * Returns Razorpay subscription details or free tier transition message.
  */
-export async function checkoutPlan(planId: string) {
-  try {
-    return await apiClient(endpoints.subscription.checkout, { body: JSON.stringify({ planId }) });
-  } catch {
-    return { success: true, message: 'Billing is disabled in self-hosted mode' };
-  }
+export async function checkoutPlan(projectId: string, planId: string) {
+  const r: any = await apiClient(endpoints.subscription.checkout, {
+    body: JSON.stringify({ projectId, planId }),
+  });
+  return r.data || r;
 }
 
 /**
- * Cancels the user's active subscription at period end.
+ * Verifies Razorpay checkout cryptographic signature and activates subscription.
  */
-export async function cancelSubscription() {
+export async function verifyPayment(payload: VerifyPaymentPayload) {
+  const r: any = await apiClient(endpoints.subscription.verify, {
+    body: JSON.stringify(payload),
+  });
+  return r.data || r;
+}
+
+/**
+ * Cancels the project's active subscription at period end.
+ */
+export async function cancelSubscription(projectId: string) {
+  const r: any = await apiClient(endpoints.subscription.cancel, {
+    body: JSON.stringify({ projectId }),
+  });
+  return r.data || r;
+}
+
+/**
+ * Retrieves paginated payment transaction history for the project.
+ */
+export async function getPaymentHistory(projectId: string, page = 1, limit = 10) {
   try {
-    return await apiClient(endpoints.subscription.cancel);
+    const query = `?projectId=${encodeURIComponent(projectId)}&page=${page}&limit=${limit}`;
+    const r: any = await apiClient({
+      path: `${endpoints.subscription.payments.path}${query}`,
+      method: 'GET',
+    });
+    return r.data || r;
   } catch {
-    return { success: true, message: 'Billing is disabled in self-hosted mode' };
+    return { data: [], pagination: { total: 0, page, limit, totalPages: 0 } };
   }
 }

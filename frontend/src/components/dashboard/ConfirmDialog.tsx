@@ -58,7 +58,7 @@ export function ConfirmDialog({
       onClick={isLoading ? undefined : onClose}
     >
       <div
-        className="bg-surface border border-border/70 p-6 rounded-xl w-full max-w-md shadow-2xl"
+        className="bg-surface border border-border/70 p-6 rounded-2xl w-full max-w-md shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 mb-4">
@@ -108,7 +108,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 rounded-lg text-sm text-muted hover:text-text hover:bg-surface-2 font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded-xl text-xs text-muted hover:text-text hover:bg-surface-2 font-medium transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -116,10 +116,10 @@ export function ConfirmDialog({
             type="button"
             onClick={() => handleSubmit()}
             disabled={isSubmitDisabled}
-            className={`flex items-center gap-2 px-4 py-2 font-medium rounded-lg text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`flex items-center gap-2 px-4 py-2 font-medium rounded-xl text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm ${
               danger
                 ? "bg-red-500 text-white hover:bg-red-600"
-                : "bg-accent text-bg hover:opacity-90"
+                : "bg-primary text-white hover:bg-primary-hover"
             }`}
           >
             {isLoading && <Loader2 size={14} className="animate-spin" />}

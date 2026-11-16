@@ -46,6 +46,6 @@ COPY --chown=dbaas:dbaas --from=builder /usr/src/app/dist ./dist
 # Switch to non-root user
 USER dbaas
 
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["node", "dist/main"]

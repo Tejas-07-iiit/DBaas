@@ -10,8 +10,8 @@ The **Multi-DBaaS (M-DBaaS)** platform employs a three-tier infrastructure model
    - Interacts with infrastructure exclusively via the `IInfrastructureProvider` interface.
    - **Never** directly executes hypervisor/KVM shell commands or holds raw Docker socket permissions.
 
-2. **Central Management VM (Privileged Infrastructure Layer)**:
-   - Dedicated management virtual machine deployed on the platform's private subnet (`10.50.0.2/24`).
+2. **Central Management / Provision VM (Privileged Infrastructure Layer)**:
+   - Dedicated management virtual machine deployed on the libvirt `default` network (`192.168.122.7:8080`).
    - Receives strongly typed, authenticated REST requests from the backend control plane.
    - Interfaces directly with KVM/libvirt and the host hypervisor.
    - Allocates dedicated virtual disks on local SSD storage volumes for each customer database instance.
@@ -20,7 +20,7 @@ The **Multi-DBaaS (M-DBaaS)** platform employs a three-tier infrastructure model
 
 3. **Dedicated Customer Database VMs**:
    - Each customer-requested database instance runs in its own dedicated, isolated VM (e.g., PostgreSQL VM, MongoDB VM, Qdrant VM, Neo4j VM).
-   - Assigned an isolated private IP address (e.g. `10.50.0.11`, `10.50.0.12`).
+   - Assigned an isolated private IP address (e.g. `192.168.122.11`, `192.168.122.12`).
    - Database ports are **not** exposed directly to the public internet by default.
    - Traffic flows strictly through the platform's authorized network routing layer.
 
@@ -91,7 +91,7 @@ The Central Management VM exposes a dedicated management REST service. All reque
       "password": "temporary-bootstrap-password"
     },
     "network": {
-      "subnet": "10.50.0.0/24"
+      "subnet": "192.168.122.0/24"
     },
     "tags": {
       "databaseName": "production-pg",

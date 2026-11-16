@@ -2,10 +2,11 @@
  * @file src/lib/auth/AuthProvider.tsx
  * @description Root authentication provider and context for DBaaS.
  * 
- * Supports three authentication modalities:
- * 1. Demo Mode: In-browser simulated session with sample user profile
- * 2. Backend JWT: REST API bearer token auth with automatic refresh
- * 3. Firebase OAuth: Google Identity Provider with fallback linking to backend
+ * Supports:
+ * 1. Firebase Email & Password authentication
+ * 2. Firebase OAuth (Google and GitHub)
+ * 3. Local Development / Demo Mode bypass (dev-token)
+ * 4. Token synchronization with NestJS backend (/users/me)
  */
 
 "use client";
@@ -14,19 +15,31 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { tokenStorage } from './tokenStorage';
 import { authApi } from '@/lib/api/auth';
 import type { MeResponse, LoginRequest, RegisterRequest } from '@/lib/api/mappers';
-// DEMO MODE
-import { isDemoEnabled } from './demo/demoConfig';
-import { getDemoSession, setDemoSession, clearDemoSession } from './demo/demoSession';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile,
+  signInWithPopup, 
+  signInWithRedirect, 
+  signOut, 
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth, googleProvider, githubProvider, isFirebaseConfigured } from '@/lib/firebase/client';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: MeResponse | null;
   status: AuthStatus;
+  isFirebaseConfigured: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
-  logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithGithub: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,93 +48,138 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<MeResponse | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
 
+  const syncBackendUser = useCallback(async (shouldThrow = false): Promise<MeResponse | null> => {
+    try {
+      const data = await authApi.me();
+      setUser(data);
+      setStatus('authenticated');
+      return data;
+    } catch (err) {
+      tokenStorage.clear();
+      setUser(null);
+      setStatus('unauthenticated');
+      if (shouldThrow) throw err;
+      return null;
+    }
+  }, []);
+
   const checkSession = useCallback(async () => {
     const token = tokenStorage.getAccessToken();
     const source = tokenStorage.getTokenSource();
+
     if (!token && source !== 'firebase') {
       setStatus('unauthenticated');
       return;
     }
 
-    try {
-      const data = await authApi.me();
-      setUser(data);
-      setStatus('authenticated');
-    } catch {
-      tokenStorage.clear();
-      setStatus('unauthenticated');
+    if (source === 'firebase' && isFirebaseConfigured) {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const freshToken = await currentUser.getIdToken();
+        tokenStorage.setTokens(freshToken);
+        await syncBackendUser();
+        return;
+      }
     }
-  }, []);
+
+    await syncBackendUser();
+  }, [syncBackendUser]);
 
   useEffect(() => {
-    if (tokenStorage.getTokenSource() === 'firebase') {
-       import('@/lib/firebase/client').then(({ auth }) => {
-          import('firebase/auth').then(({ onAuthStateChanged }) => {
-             const unsub = onAuthStateChanged(auth, (user) => {
-                if (user) checkSession();
-                else { setStatus('unauthenticated'); setUser(null); tokenStorage.clear(); }
-             });
-             return () => unsub();
-          });
-       });
+    if (isFirebaseConfigured) {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+        if (firebaseUser) {
+          try {
+            tokenStorage.setTokenSource('firebase');
+            const token = await firebaseUser.getIdToken();
+            tokenStorage.setTokens(token);
+            await syncBackendUser();
+          } catch {
+            tokenStorage.clear();
+            setUser(null);
+            setStatus('unauthenticated');
+          }
+        } else {
+          // No active Firebase user
+          if (tokenStorage.getTokenSource() === 'firebase') {
+            tokenStorage.clear();
+            setUser(null);
+            setStatus('unauthenticated');
+          } else {
+            // Might be dev-token or demo mode
+            await checkSession();
+          }
+        }
+      });
+
+      return () => unsubscribe();
     } else {
-       checkSession();
+      // Firebase not configured, fallback to backend/dev-token session check
+      checkSession();
     }
-  }, [checkSession]);
+  }, [checkSession, syncBackendUser]);
 
   const loginWithGoogle = async () => {
-    const { auth, googleProvider } = await import('@/lib/firebase/client');
-    const { signInWithPopup, signInWithRedirect } = await import('firebase/auth');
+    if (!isFirebaseConfigured) {
+      throw new Error("Firebase is not configured. Please set NEXT_PUBLIC_FIREBASE_* environment variables.");
+    }
+
     try {
-      await signInWithPopup(auth, googleProvider);
+      const credential = await signInWithPopup(auth, googleProvider);
+      tokenStorage.setTokenSource('firebase');
+      const token = await credential.user.getIdToken();
+      tokenStorage.setTokens(token);
+      await syncBackendUser(true);
     } catch (err: any) {
       if (err.code === 'auth/popup-blocked') {
-         await signInWithRedirect(auth, googleProvider);
-         return;
+        await signInWithRedirect(auth, googleProvider);
+        return;
       }
-      if (err.code === 'auth/popup-closed-by-user') return;
-      if (err.code === 'auth/account-exists-with-different-credential') throw new Error("An account exists with a different credential.");
-      if (err.code === 'auth/network-request-failed') throw new Error("Network request failed.");
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return;
+      }
       throw err;
     }
-    
-    tokenStorage.setTokenSource('firebase');
-    // Try to call me. If 404 or 401, auto-register
+  };
+
+  const loginWithGithub = async () => {
+    if (!isFirebaseConfigured) {
+      throw new Error("Firebase is not configured. Please set NEXT_PUBLIC_FIREBASE_* environment variables.");
+    }
+
     try {
-       const user = await authApi.me();
-       setUser(user);
-       setStatus('authenticated');
+      const credential = await signInWithPopup(auth, githubProvider);
+      tokenStorage.setTokenSource('firebase');
+      const token = await credential.user.getIdToken();
+      tokenStorage.setTokens(token);
+      await syncBackendUser(true);
     } catch (err: any) {
-       if (err.status === 404 || err.status === 401) {
-          const user = auth.currentUser;
-          if (user) {
-             await authApi.register({ email: user.email!, password: "", name: user.displayName || user.email!.split('@')[0] });
-             const newUser = await authApi.me();
-             setUser(newUser);
-             setStatus('authenticated');
-          }
-       } else {
-          throw err;
-       }
+      if (err.code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, githubProvider);
+        return;
+      }
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return;
+      }
+      throw err;
     }
   };
 
   const login = async (data: LoginRequest) => {
-    tokenStorage.setTokenSource('backend');
-    
-    // In local/self-hosted development, if demo credentials or no Firebase configured, log in with dev-token to talk to real backend
-    const isDemoCreds = data.email === process.env.NEXT_PUBLIC_DEMO_EMAIL && data.password === process.env.NEXT_PUBLIC_DEMO_PASSWORD;
-    const isDevFallback = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NODE_ENV !== 'production';
+    // In local development, check demo credentials or dev fallback first
+    const isDemoCreds =
+      Boolean(process.env.NEXT_PUBLIC_DEMO_EMAIL) &&
+      data.email === process.env.NEXT_PUBLIC_DEMO_EMAIL &&
+      data.password === process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+    const isDevFallback = !isFirebaseConfigured && process.env.NODE_ENV !== 'production';
 
     if (isDemoCreds || isDevFallback) {
+      tokenStorage.setTokenSource('backend');
       tokenStorage.setTokens('dev-token', 'dev-refresh-token');
       try {
-        const userProfile = await authApi.me();
-        setUser(userProfile);
-        setStatus('authenticated');
+        await syncBackendUser(true);
         return;
-      } catch (err) {
-        // Fallback user if backend was temporarily unreachable
+      } catch {
         const fallbackUser: MeResponse = {
           id: 'dev-user-001',
           name: 'Developer Admin',
@@ -135,47 +193,121 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    if (isFirebaseConfigured) {
+      if (!data.password) {
+        throw new Error("Password is required");
+      }
+      const credential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      tokenStorage.setTokenSource('firebase');
+      const token = await credential.user.getIdToken();
+      tokenStorage.setTokens(token);
+      await syncBackendUser(true);
+      return;
+    }
+
+    // Backend endpoint fallback
     const res = await authApi.login(data);
     const access = res.accessToken;
     const refresh = res.refreshToken;
     if (access) {
+      tokenStorage.setTokenSource('backend');
       tokenStorage.setTokens(access, refresh);
-      await checkSession();
+      await syncBackendUser(true);
     }
   };
 
   const register = async (data: RegisterRequest) => {
-    tokenStorage.setTokenSource('backend');
+    const isDevFallback = !isFirebaseConfigured && process.env.NODE_ENV !== 'production';
+
+    if (isDevFallback) {
+      tokenStorage.setTokenSource('backend');
+      tokenStorage.setTokens('dev-token', 'dev-refresh-token');
+      try {
+        await syncBackendUser(true);
+        return;
+      } catch {
+        const fallbackUser: MeResponse = {
+          id: 'dev-user-001',
+          name: data.name || 'Developer Admin',
+          email: data.email,
+          role: 'ADMIN',
+          isPlatformAdmin: true,
+        };
+        setUser(fallbackUser);
+        setStatus('authenticated');
+        return;
+      }
+    }
+
+    if (isFirebaseConfigured) {
+      if (!data.password) {
+        throw new Error("Password is required");
+      }
+      const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      if (data.name) {
+        try {
+          await updateProfile(credential.user, { displayName: data.name });
+        } catch {}
+      }
+      tokenStorage.setTokenSource('firebase');
+      const token = await credential.user.getIdToken();
+      tokenStorage.setTokens(token);
+      // The backend will automatically create the user in the database on GET /users/me
+      await syncBackendUser(true);
+      return;
+    }
+
+    // Backend endpoint fallback
     const res = await authApi.register(data);
     const access = res.accessToken;
     const refresh = res.refreshToken;
     if (access) {
+      tokenStorage.setTokenSource('backend');
       tokenStorage.setTokens(access, refresh);
-      await checkSession();
+      await syncBackendUser();
     }
   };
 
+  const sendPasswordReset = async (email: string) => {
+    if (isFirebaseConfigured) {
+      await sendPasswordResetEmail(auth, email);
+      return;
+    }
+    await authApi.forgotPassword({ email });
+  };
+
   const logout = async () => {
-    if (tokenStorage.getTokenSource() === 'firebase') {
-       try {
-         const { auth } = await import('@/lib/firebase/client');
-         await auth.signOut();
-       } catch {}
+    if (isFirebaseConfigured) {
+      try {
+        await signOut(auth);
+      } catch {}
     }
 
     try {
       if (tokenStorage.getAccessToken() !== 'dev-token') {
         await authApi.logout();
       }
-    } catch {} // ignore failure, clear locally anyway
-    
+    } catch {}
+
     tokenStorage.clear();
     setUser(null);
     setStatus('unauthenticated');
   };
 
   return (
-    <AuthContext.Provider value={{ user, status, login, register, logout, loginWithGoogle }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        status,
+        isFirebaseConfigured,
+        login,
+        register,
+        loginWithGoogle,
+        loginWithGithub,
+        sendPasswordReset,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

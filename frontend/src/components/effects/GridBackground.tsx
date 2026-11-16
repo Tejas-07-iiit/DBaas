@@ -72,7 +72,8 @@ export default function GridBackground() {
       ctx!.clearRect(0, 0, w, h);
 
       // ── 1. Draw the grid lines ──────────────────────────────
-      ctx!.strokeStyle = `rgba(130, 160, 200, 0.055)`;
+      const isLight = document.documentElement.classList.contains("light") || document.documentElement.getAttribute("data-theme") === "light";
+      ctx!.strokeStyle = isLight ? "rgba(30, 60, 45, 0.055)" : "rgba(130, 160, 200, 0.055)";
       ctx!.lineWidth = 1;
 
       // Vertical lines

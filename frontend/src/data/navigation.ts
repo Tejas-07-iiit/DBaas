@@ -28,7 +28,7 @@ export const productDatabases = [
     name:     "PostgreSQL",
     tagline:  "Relational data, zero ops",
     desc:     "The gold standard database. Tables, joins, ACID transactions — fully managed.",
-    color:    "#4C8DFF",
+    color:    "#8B5CF6",
     href:     "/product/postgresql",
   },
   {

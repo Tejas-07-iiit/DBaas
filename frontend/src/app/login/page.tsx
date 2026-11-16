@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,8 +11,10 @@ import { GuestOnly } from "@/lib/auth/GuestOnly";
 import { getSafeRedirect } from "@/lib/auth/safeRedirect";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/errors";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth/authErrors";
 import { useRouter, useSearchParams } from "next/navigation";
 // DEMO MODE
 import { isDemoEnabled } from "@/lib/auth/demo/demoConfig";
@@ -20,7 +22,7 @@ import { isDemoEnabled } from "@/lib/auth/demo/demoConfig";
 type LoginForm = z.infer<typeof loginSchema>;
 
 function LoginContent() {
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [globalError, setGlobalError] = useState("");
@@ -28,28 +30,39 @@ function LoginContent() {
 
   const isRegistered = searchParams.get('registered') === '1';
   const isReset = searchParams.get('reset') === '1';
-  const next = searchParams.get('next');
+  const next = searchParams.get('next') || searchParams.get('redirect');
+  const emailParam = searchParams.get('email');
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema)
   });
+
+  useEffect(() => {
+    if (emailParam) {
+      setValue('email', emailParam);
+    }
+  }, [emailParam, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setGlobalError("");
     try {
       await login(data);
-      const next = searchParams.get('next');
       router.replace(getSafeRedirect(next, '/dashboard'));
     } catch (err: any) {
       if (err instanceof ApiError) {
         setGlobalError(err.message);
       } else {
-        setGlobalError("An unexpected error occurred");
+        setGlobalError(getFriendlyAuthErrorMessage(err));
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOAuthSuccess = () => {
+    const next = searchParams.get('next');
+    router.replace(getSafeRedirect(next, '/dashboard'));
   };
 
   return (
@@ -71,6 +84,14 @@ function LoginContent() {
             {globalError}
           </div>
         )}
+
+        <div className="mb-6">
+          <OAuthButtons
+            onSuccess={handleOAuthSuccess}
+            onError={setGlobalError}
+            disabled={loading}
+          />
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">

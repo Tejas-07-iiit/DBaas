@@ -18,6 +18,21 @@ let refreshPromise: Promise<string | null> | null = null;
  * @returns {Promise<string | null>} The new access token, or null if refresh failed.
  */
 async function executeRefresh(): Promise<string | null> {
+  const source = tokenStorage.getTokenSource();
+  if (source === 'firebase') {
+    try {
+      const { auth } = await import('@/lib/firebase/client');
+      if (auth.currentUser) {
+        const freshToken = await auth.currentUser.getIdToken(true);
+        if (freshToken) {
+          tokenStorage.setTokens(freshToken);
+          return freshToken;
+        }
+      }
+    } catch {}
+    return null;
+  }
+
   const refresh = tokenStorage.getRefreshToken();
   if (!refresh) return null;
 

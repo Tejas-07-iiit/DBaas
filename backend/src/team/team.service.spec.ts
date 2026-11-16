@@ -52,6 +52,9 @@ describe('TeamService', () => {
     updatedAt: mockDate,
   };
 
+  let emailService: any;
+  let configService: any;
+
   beforeEach(() => {
     prisma = {
       projectMember: {
@@ -62,17 +65,39 @@ describe('TeamService', () => {
         update: jest.fn(),
         delete: jest.fn(),
       },
+      projectInvitation: {
+        findUnique: jest.fn(),
+        findFirst: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+      },
       user: {
         findUnique: jest.fn(),
       },
+      $transaction: jest.fn((promises) => Promise.all(promises)),
     };
 
     usersService = {
       findOrCreateFromFirebase: jest.fn(),
     };
 
+    emailService = {
+      sendProjectInvitation: jest.fn().mockResolvedValue({ sent: true }),
+    };
+
+    configService = {
+      get: jest.fn().mockReturnValue('http://localhost:3000'),
+    };
+
     authService = new ProjectAuthorizationService(prisma);
-    service = new TeamService(prisma, usersService, authService);
+    service = new TeamService(
+      prisma,
+      usersService,
+      authService,
+      emailService,
+      configService,
+    );
   });
 
   describe('addMember', () => {
@@ -224,6 +249,25 @@ describe('TeamService', () => {
           { email: newUser.email, role: ProjectRole.MEMBER },
         ),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw BadRequestException if adding oneself', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectMember.findUnique.mockResolvedValueOnce({
+        id: 'pm-owner',
+        userId: ownerUser.id,
+        projectId: mockProject.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      await expect(
+        service.addMember(
+          { uid: 'fb-owner', email: ownerUser.email },
+          mockProject.id,
+          { email: ownerUser.email, role: ProjectRole.MEMBER },
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -448,6 +492,295 @@ describe('TeamService', () => {
           { uid: 'fb-member', email: memberUser.email },
           mockProject.id,
           'other-user-id',
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('createInvitation', () => {
+    it('should create an invitation and send email for an unregistered user', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectMember.findUnique.mockResolvedValueOnce({
+        id: 'pm-owner',
+        userId: ownerUser.id,
+        projectId: mockProject.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.user.findUnique.mockResolvedValue(null); // unregistered user
+      prisma.projectInvitation.findFirst.mockResolvedValue(null); // no existing pending invite
+      prisma.projectInvitation.create.mockResolvedValue({
+        id: 'inv-1',
+        projectId: mockProject.id,
+        email: 'unregistered@example.com',
+        role: ProjectRole.MEMBER,
+        token: 'mock-token-12345678901234567890',
+        invitedById: ownerUser.id,
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 600000),
+        createdAt: mockDate,
+        invitedBy: ownerUser,
+        project: mockProject,
+      });
+
+      const res = await service.createInvitation(
+        { uid: 'fb-owner', email: ownerUser.email },
+        mockProject.id,
+        { email: 'unregistered@example.com', role: ProjectRole.MEMBER },
+      );
+
+      expect(res.id).toBe('inv-1');
+      expect(res.email).toBe('unregistered@example.com');
+      expect(emailService.sendProjectInvitation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'unregistered@example.com',
+          projectName: mockProject.name,
+          role: ProjectRole.MEMBER,
+        }),
+      );
+    });
+
+    it('should throw ConflictException if the target user is already a member', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectMember.findUnique
+        .mockResolvedValueOnce({
+          id: 'pm-owner',
+          userId: ownerUser.id,
+          projectId: mockProject.id,
+          role: ProjectRole.OWNER,
+          project: mockProject,
+        })
+        .mockResolvedValueOnce({
+          id: 'pm-member',
+          userId: memberUser.id,
+          projectId: mockProject.id,
+          role: ProjectRole.MEMBER,
+        });
+
+      prisma.user.findUnique.mockResolvedValue(memberUser);
+
+      await expect(
+        service.createInvitation(
+          { uid: 'fb-owner', email: ownerUser.email },
+          mockProject.id,
+          { email: memberUser.email, role: ProjectRole.MEMBER },
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw BadRequestException if inviting oneself', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectMember.findUnique.mockResolvedValueOnce({
+        id: 'pm-owner',
+        userId: ownerUser.id,
+        projectId: mockProject.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      await expect(
+        service.createInvitation(
+          { uid: 'fb-owner', email: ownerUser.email },
+          mockProject.id,
+          { email: ownerUser.email, role: ProjectRole.MEMBER },
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('listInvitations', () => {
+    it('should list all pending invitations for authorized admin/owner', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-owner',
+        userId: ownerUser.id,
+        projectId: mockProject.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.projectInvitation.findMany.mockResolvedValue([
+        {
+          id: 'inv-1',
+          projectId: mockProject.id,
+          email: 'pending@example.com',
+          role: ProjectRole.MEMBER,
+          status: 'PENDING',
+          expiresAt: mockDate,
+          createdAt: mockDate,
+          invitedBy: ownerUser,
+        },
+      ]);
+
+      const res = await service.listInvitations(
+        { uid: 'fb-owner', email: ownerUser.email },
+        mockProject.id,
+      );
+
+      expect(res).toHaveLength(1);
+      expect(res[0].email).toBe('pending@example.com');
+    });
+  });
+
+  describe('getInvitationByToken', () => {
+    it('should return invitation details by token', async () => {
+      prisma.projectInvitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        projectId: mockProject.id,
+        email: 'colleague@example.com',
+        role: ProjectRole.ADMIN,
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 86400000), // future
+        invitedBy: ownerUser,
+        project: mockProject,
+      });
+
+      const res = await service.getInvitationByToken('valid-token-123456');
+      expect(res.isValid).toBe(true);
+      expect(res.projectName).toBe(mockProject.name);
+      expect(res.role).toBe(ProjectRole.ADMIN);
+    });
+
+    it('should throw NotFoundException if token does not exist', async () => {
+      prisma.projectInvitation.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.getInvitationByToken('nonexistent-token'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('acceptInvitation', () => {
+    it('should successfully accept a pending invitation and add member', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(newUser);
+      prisma.projectInvitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        projectId: mockProject.id,
+        email: newUser.email,
+        role: ProjectRole.MEMBER,
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 86400000),
+        project: mockProject,
+      });
+
+      prisma.projectMember.findUnique.mockResolvedValue(null); // not already member
+      prisma.projectMember.create.mockResolvedValue({
+        id: 'pm-new',
+        projectId: mockProject.id,
+        userId: newUser.id,
+        role: ProjectRole.MEMBER,
+      });
+      prisma.projectInvitation.update.mockResolvedValue({
+        id: 'inv-1',
+        status: 'ACCEPTED',
+      });
+
+      const res = await service.acceptInvitation(
+        { uid: 'fb-new', email: newUser.email },
+        'valid-token',
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.projectId).toBe(mockProject.id);
+      expect(res.role).toBe(ProjectRole.MEMBER);
+    });
+
+    it('should throw ForbiddenException if accepting user email does not match invitation email', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectInvitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        projectId: mockProject.id,
+        email: 'invited-someone-else@example.com',
+        role: ProjectRole.MEMBER,
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 86400000),
+        project: mockProject,
+      });
+
+      await expect(
+        service.acceptInvitation(
+          { uid: 'fb-owner', email: ownerUser.email },
+          'valid-token',
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('getMyPendingInvitations', () => {
+    it('should return pending invitations sent to authenticated user email', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(newUser);
+      prisma.projectInvitation.findMany.mockResolvedValue([
+        {
+          id: 'inv-1',
+          token: 'token-abc',
+          projectId: mockProject.id,
+          project: {
+            ...mockProject,
+            owner: ownerUser,
+          },
+          role: ProjectRole.MEMBER,
+          status: 'PENDING',
+          expiresAt: new Date(Date.now() + 86400000),
+          createdAt: mockDate,
+          invitedBy: ownerUser,
+        },
+      ]);
+
+      const res = await service.getMyPendingInvitations({
+        uid: 'fb-new',
+        email: newUser.email,
+      });
+
+      expect(res).toHaveLength(1);
+      expect(res[0].projectName).toBe(mockProject.name);
+      expect(res[0].token).toBe('token-abc');
+      expect(res[0].role).toBe(ProjectRole.MEMBER);
+    });
+  });
+
+  describe('declineInvitation', () => {
+    it('should decline an invitation and update status to REVOKED', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(newUser);
+      prisma.projectInvitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        token: 'token-abc',
+        email: newUser.email,
+        status: 'PENDING',
+        project: mockProject,
+      });
+      prisma.projectInvitation.update.mockResolvedValue({
+        id: 'inv-1',
+        status: 'REVOKED',
+      });
+
+      const res = await service.declineInvitation(
+        { uid: 'fb-new', email: newUser.email },
+        'token-abc',
+      );
+
+      expect(res.success).toBe(true);
+      expect(prisma.projectInvitation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { status: 'REVOKED' },
+        }),
+      );
+    });
+
+    it('should throw ForbiddenException if declining user email does not match invitation email', async () => {
+      usersService.findOrCreateFromFirebase.mockResolvedValue(ownerUser);
+      prisma.projectInvitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        token: 'token-abc',
+        email: 'other@example.com',
+        status: 'PENDING',
+        project: mockProject,
+      });
+
+      await expect(
+        service.declineInvitation(
+          { uid: 'fb-owner', email: ownerUser.email },
+          'token-abc',
         ),
       ).rejects.toThrow(ForbiddenException);
     });

@@ -24,7 +24,7 @@ export const RESOURCE_PROFILES: ResourceProfile[] = [
     name: 'small',
     cpuCores: 1,
     ramMb: 1024,
-    storageMb: 5120,
+    storageMb: 10240,
   },
   {
     name: 'medium',

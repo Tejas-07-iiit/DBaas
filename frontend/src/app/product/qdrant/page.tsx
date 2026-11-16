@@ -154,7 +154,7 @@ function QdrantPlayground() {
   const top3 = results.slice(0, 3);
 
   return (
-    <div className="bg-[#05080F] rounded-2xl border border-[var(--engine)]/30 overflow-hidden shadow-[0_0_30px_rgba(255,77,141,0.1)]">
+    <div className="bg-surface rounded-2xl border border-[var(--engine)]/30 overflow-hidden shadow-[0_0_30px_rgba(255,77,141,0.1)]">
       {/* Top Bar */}
       <div className="p-6 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">
@@ -162,7 +162,7 @@ function QdrantPlayground() {
             <button
               key={k}
               onClick={() => setQueryKey(k)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${queryKey === k ? "bg-[var(--engine)] text-[#05080F]" : "bg-surface border border-border text-muted hover:text-text"}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${queryKey === k ? "bg-[var(--engine)] text-white font-semibold" : "bg-surface border border-border text-muted hover:text-text"}`}
             >
               {QUERIES[k].label}
             </button>
@@ -313,7 +313,7 @@ function VisualPayload() {
   const [enabled, setEnabled] = useState(true);
   return (
     <div className="w-full flex flex-col items-center gap-6">
-      <div className="flex items-center gap-3 bg-[#05080F] p-3 rounded-lg border border-[var(--engine)]/50 cursor-pointer" onClick={() => setEnabled(!enabled)}>
+      <div className="flex items-center gap-3 bg-surface p-3 rounded-lg border border-[var(--engine)]/50 cursor-pointer" onClick={() => setEnabled(!enabled)}>
         <div className={`w-10 h-5 rounded-full p-1 transition-colors ${enabled ? "bg-[var(--engine)]" : "bg-border"}`}>
           <motion.div className="w-3 h-3 bg-white rounded-full shadow-sm" animate={{ x: enabled ? 20 : 0 }} />
         </div>

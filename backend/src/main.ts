@@ -10,6 +10,7 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    rawBody: true,
   });
 
   // Security headers & compression
@@ -31,8 +32,12 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
 
   // CORS
+  const corsOrigin = process.env.CORS_ORIGIN
+    ? (process.env.CORS_ORIGIN === '*' ? true : process.env.CORS_ORIGIN.split(',').map((o) => o.trim()))
+    : true;
+
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' ? false : true,
+    origin: corsOrigin,
     credentials: true,
   });
 

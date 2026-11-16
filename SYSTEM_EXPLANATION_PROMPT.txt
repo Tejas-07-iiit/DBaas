@@ -47,7 +47,7 @@ THE MULTI-DBAAS SOLUTION:
 Multi-DBaaS consolidates all database operations into:
 - One intuitive web interface (Next.js 16 + React 19).
 - One secure API Gateway and Control Plane (NestJS + Prisma + BullMQ).
-- One isolated, private infrastructure network (10.50.0.0/24 subnet).
+- One isolated, private infrastructure network (192.168.122.0/24 subnet on libvirt default network).
 - Unified multi-tenant RBAC, automated quotas, lifecycle tracking, and encrypted credential rotation.
 
 ================================================================================
@@ -57,7 +57,7 @@ THE CARDINAL RULE:
 Customers and external applications NEVER connect directly to customer database instances over the public internet.
 
 - Traditional cloud DBaaS providers expose public IP addresses and open database ports (5432, 27017, 6333, 7474) protected only by firewall allowlists or public credentials.
-- Multi-DBaaS fundamentally inverts this model: database instances live exclusively within an isolated private network (e.g., 10.50.0.0/24).
+- Multi-DBaaS fundamentally inverts this model: database instances live exclusively within an isolated private network (e.g., 192.168.122.0/24).
 - The NestJS Backend is the SOLE gateway for both:
   1. Control-Plane Operations: Provisioning, starting, stopping, restarting, resizing, deleting, credential rotation, and configuration updates.
   2. Data-Plane Operations: Queries, mutations, and vector searches (submitted via authenticated HTTPS REST endpoints and forwarded internally to the database).
@@ -86,14 +86,14 @@ Multi-DBaaS is structured across 4 distinct layers:
 - Asynchronous Task Queue: BullMQ with Redis for non-blocking, distributed job processing.
 
 [LAYER 3: INFRASTRUCTURE ORCHESTRATION LAYER]
-- Central Management VM: Dedicated management node (`10.50.0.2/24`) reachable over mutual TLS (mTLS) or private API tokens.
+- Provision VM: Dedicated provisioning coordination node (`192.168.122.7:8080`) reachable directly from dbaas-api gateway over standard libvirt default network (`virbr0`).
 - Hypervisor / Container Runtime: KVM/libvirt on dedicated SSD storage or Kubernetes with isolated namespaces.
-- Private Isolated Network: Subnet `10.50.0.0/24` with strict firewall/NetworkPolicy rules.
-- Network Tunneling: WireGuard VPN tunnels establishing encrypted pathways between control plane routers and hypervisor nodes.
+- Standard Private Network: Subnet `192.168.122.0/24` on libvirt bridge (`virbr0`), completely bypassing any router VM and eliminating Dbaas-Net.
+- Host-Side Provisioning API: Restricted control plane interface on Ubuntu host (`192.168.122.1:8081`) invoked by the Provision VM.
 
 [LAYER 4: DATA PLANE LAYER]
 - Isolated Customer Database Instances: Dedicated VMs or container workloads running certified engine binaries (PostgreSQL, MongoDB, Qdrant, Neo4j).
-- Private IP Allocations: Dedicated internal addresses (e.g., `10.50.0.11`, `10.50.0.12`).
+- Private IP Allocations: Dedicated internal addresses (e.g., `192.168.122.11`, `192.168.122.12`).
 - Storage Subsystem: Dedicated Persistent Volume Claims (PVCs) or raw virtual disk images (QCOW2 on SSD).
 
 ================================================================================
@@ -257,9 +257,9 @@ Every lifecycle trigger (PROVISION, START, STOP, RESTART, DELETE) creates a trac
 8. INFRASTRUCTURE ORCHESTRATION & CENTRAL MANAGEMENT VM CONTRACT
 ================================================================================
 THREE-TIER INFRASTRUCTURE HIERARCHY:
-1. Control Plane Backend: NestJS orchestrator.
-2. Central Management VM (`10.50.0.2`): Privileged gateway to KVM/libvirt hypervisor.
-3. Dedicated Database VMs (`10.50.0.10 - 10.50.0.254`): Isolated customer database guests.
+1. Control Plane Backend: NestJS orchestrator (`dbaas-api`).
+2. Provision VM (`192.168.122.7:8080`): Management & provisioning coordinator communicating with host API (`192.168.122.1:8081`).
+3. Dedicated Database VMs (`192.168.122.10 - 192.168.122.254`): Isolated customer database guests on default libvirt network (`virbr0`).
 
 PROVIDER ABSTRACTION PATTERN (`IInfrastructureProvider`):
 The NestJS backend interacts with infrastructure solely through a decoupled TypeScript interface:

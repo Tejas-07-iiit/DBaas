@@ -61,7 +61,7 @@ export class VmsService {
         dto.cpu,
         dto.memoryMb,
         volName,
-        'Dbaas-Net',
+        'default',
         {
           ipAddress: dto.ipAddress || dto.internalIp,
           gateway: dto.gateway,

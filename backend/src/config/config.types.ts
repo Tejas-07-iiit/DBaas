@@ -13,4 +13,11 @@ export interface AppConfig {
     clientEmail: string;
     privateKey: string;
   };
+  razorpay?: {
+    keyId: string;
+    keySecret: string;
+    webhookSecret: string;
+    mode: 'test' | 'live';
+  };
+  paymentEnabled?: boolean;
 }

@@ -68,7 +68,7 @@ function UptimeBar({ history }: { history: StatusService['history'] }) {
             
             {/* Tooltip */}
             {hoverIdx === i && (
-              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-[#05080F] border border-border rounded-lg shadow-xl p-3 z-20 pointer-events-none">
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-surface border border-border rounded-lg shadow-xl p-3 z-20 pointer-events-none">
                 <div className="text-xs font-mono text-muted mb-1">{day.date}</div>
                 <div className="text-sm font-bold flex items-center gap-1.5 mb-1">
                   {day.status === "up" ? <CheckCircle2 size={14} className="text-[#3FCF6D]"/> : day.status === "degraded" ? <AlertCircle size={14} className="text-amber-500"/> : <XCircle size={14} className="text-red-500"/>}
@@ -115,7 +115,7 @@ function IncidentRow({ incident }: { incident: StatusIncident }) {
               {incident.events.map((event, i) => {
                 let color = "bg-muted";
                 if (event.status === "Investigating") color = "bg-amber-500";
-                if (event.status === "Identified") color = "bg-blue-500";
+                if (event.status === "Identified") color = "bg-violet-500";
                 if (event.status === "Monitoring") color = "bg-teal-500";
                 if (event.status === "Resolved") color = "bg-[#3FCF6D]";
 

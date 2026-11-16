@@ -106,7 +106,7 @@ function MongoPlayground() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 key={doc._id}
-                className="bg-[#05080F] p-4 rounded-xl border border-border/50 font-mono text-sm text-muted"
+                className="bg-surface p-4 rounded-xl border border-border/50 font-mono text-sm text-muted"
               >
                 <span className="text-[var(--engine)]">{"{"}</span>
                 <div className="pl-4">
@@ -132,7 +132,7 @@ function MongoPlayground() {
       </div>
 
       {/* RIGHT: Query Builder */}
-      <div className="bg-[#05080F] rounded-2xl border border-[var(--engine)]/30 p-6 flex flex-col h-[600px] shadow-[0_0_30px_rgba(63,207,109,0.1)]">
+      <div className="bg-surface rounded-2xl border border-[var(--engine)]/30 p-6 flex flex-col h-[600px] shadow-[0_0_30px_rgba(63,207,109,0.1)]">
         <h3 className="font-bold mb-6 text-lg">Query Builder</h3>
 
         <div className="space-y-6 flex-1">
@@ -210,7 +210,7 @@ function MongoPlayground() {
 function VisualSchema() {
   return (
     <div className="w-full space-y-4 font-mono text-xs">
-      <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} className="bg-[#05080F] p-4 rounded-xl border border-[var(--engine)]/40 shadow-[0_0_15px_rgba(63,207,109,0.1)] text-muted">
+      <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} className="bg-surface p-4 rounded-xl border border-[var(--engine)]/40 shadow-[0_0_15px_rgba(63,207,109,0.1)] text-muted">
         <span className="text-[var(--engine)]">{"{"}</span>
         <div className="pl-4">
           <div>_id: 1,</div>
@@ -219,7 +219,7 @@ function VisualSchema() {
         </div>
         <span className="text-[var(--engine)]">{"}"}</span>
       </motion.div>
-      <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-[#05080F] p-4 rounded-xl border border-[var(--engine)]/40 shadow-[0_0_15px_rgba(63,207,109,0.1)] text-muted">
+      <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-surface p-4 rounded-xl border border-[var(--engine)]/40 shadow-[0_0_15px_rgba(63,207,109,0.1)] text-muted">
         <span className="text-[var(--engine)]">{"{"}</span>
         <div className="pl-4">
           <div>_id: 2,</div>
@@ -245,7 +245,7 @@ function VisualPipeline() {
           initial={{ x: -20, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           transition={{ delay: i * 0.2 }}
-          className="bg-[#05080F] p-3 rounded-lg border border-border flex items-center gap-4"
+          className="bg-surface p-3 rounded-lg border border-border flex items-center gap-4"
         >
           <div className="bg-[var(--engine)]/10 text-[var(--engine)] px-2 py-1 rounded text-xs font-bold font-mono">
             {pipe.step}
@@ -276,7 +276,7 @@ function VisualReplica() {
             <motion.div
               key={node}
               layout
-              className={`absolute w-14 h-14 -ml-7 -mt-7 rounded-xl flex items-center justify-center font-bold text-xs transition-colors duration-500 ${isPrimary ? "bg-[var(--engine)] text-[#05080F] shadow-[0_0_15px_var(--engine)] z-10 scale-110" : "bg-surface border border-border text-muted"}`}
+              className={`absolute w-14 h-14 -ml-7 -mt-7 rounded-xl flex items-center justify-center font-bold text-xs transition-colors duration-500 ${isPrimary ? "bg-[var(--engine)] text-white font-semibold shadow-[0_0_15px_var(--engine)] z-10 scale-110" : "bg-surface border border-border text-muted"}`}
               style={{ left: `${x}%`, top: `${y}%` }}
             >
               {isPrimary ? "PRIMARY" : "SEC"}
@@ -321,9 +321,9 @@ function VisualStreams() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-[#05080F] p-3 rounded-lg border border-[var(--engine)]/30 flex items-center justify-between"
+            className="bg-surface p-3 rounded-lg border border-[var(--engine)]/30 flex items-center justify-between"
           >
-            <span className={`uppercase font-bold ${ev.op === 'insert' ? 'text-green-400' : ev.op === 'delete' ? 'text-red-400' : 'text-blue-400'}`}>
+            <span className={`uppercase font-bold ${ev.op === 'insert' ? 'text-green-400' : ev.op === 'delete' ? 'text-red-400' : 'text-violet-400'}`}>
               {ev.op}
             </span>
             <span className="text-muted">{ev.coll}</span>

@@ -56,7 +56,7 @@ function PostgresPreview() {
           key={i}
           animate={{ backgroundColor: active === i ? "rgba(76,141,255,0.12)" : "rgba(76,141,255,0)" }}
           transition={{ duration: 0.3 }}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 8px", padding: "3px 4px", borderRadius: 4, color: active === i ? "#4C8DFF" : "var(--muted)" }}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 8px", padding: "3px 4px", borderRadius: 4, color: active === i ? "#8B5CF6" : "var(--muted)" }}
         >
           {row.map((cell, j) => <span key={j}>{cell}</span>)}
         </motion.div>

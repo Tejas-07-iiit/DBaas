@@ -226,7 +226,7 @@ export default function ProductPage() {
                            <path d="M100 100 L180 150 L220 150" stroke="var(--border)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
 
                            {/* Dots */}
-                           <circle r="4" fill="#4C8DFF">
+                           <circle r="4" fill="#8B5CF6">
                              <animateMotion dur="2s" repeatCount="indefinite" path="M100 100 L180 50 L220 50" />
                            </circle>
                            <circle r="4" fill="#3FCF6D">
@@ -237,8 +237,8 @@ export default function ProductPage() {
                            </circle>
 
                            {/* Engines Box */}
-                           <rect x="220" y="30" width="160" height="40" rx="6" fill="#1A1D24" stroke="#4C8DFF" strokeWidth="1" />
-                           <text x="235" y="55" fill="#4C8DFF" fontSize="12" fontWeight="bold">PG:</text>
+                           <rect x="220" y="30" width="160" height="40" rx="6" fill="#1A1D24" stroke="#8B5CF6" strokeWidth="1" />
+                           <text x="235" y="55" fill="#8B5CF6" fontSize="12" fontWeight="bold">PG:</text>
                            <text x="260" y="55" fill="var(--muted)" fontSize="12">{tab.apps[0].stores}</text>
 
                            <rect x="220" y="80" width="160" height="40" rx="6" fill="#1A1D24" stroke="#3FCF6D" strokeWidth="1" />

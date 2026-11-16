@@ -19,7 +19,7 @@ export default function Architecture() {
     app: { x: 120, y: 210, w: 140, h: 60, label: "Your App", icon: Server, color: "var(--text)" },
     gateway: { x: 450, y: 210, r: 40, label: "DBaaS Gateway", icon: Shield, color: "var(--accent)" },
     mongo: { x: 780, y: 110, w: 140, h: 50, label: "MongoDB", color: "#3FCF6D", rLabel: "us-east-1" },
-    pg: { x: 780, y: 210, w: 140, h: 50, label: "PostgreSQL", color: "#4C8DFF", rLabel: "eu-central-1" },
+    pg: { x: 780, y: 210, w: 140, h: 50, label: "PostgreSQL", color: "#8B5CF6", rLabel: "eu-central-1" },
     qdrant: { x: 780, y: 310, w: 140, h: 50, label: "Qdrant", color: "#FF4D8D", rLabel: "ap-south-1" },
     backup: { x: 450, y: 360, w: 120, h: 40, label: "S3 Backups", color: "var(--muted)", rLabel: "global" }
   };
@@ -28,7 +28,7 @@ export default function Architecture() {
   const paths = [
     { id: "app-to-gateway", d: `M 190 210 L 410 210`, active: ["app", "gateway"], color: "var(--accent)" },
     { id: "gateway-to-mongo", d: `M 490 210 C 550 210, 600 110, 710 110`, active: ["gateway", "mongo"], color: "#3FCF6D" },
-    { id: "gateway-to-pg", d: `M 490 210 L 710 210`, active: ["gateway", "pg"], color: "#4C8DFF" },
+    { id: "gateway-to-pg", d: `M 490 210 L 710 210`, active: ["gateway", "pg"], color: "#8B5CF6" },
     { id: "gateway-to-qdrant", d: `M 490 210 C 550 210, 600 310, 710 310`, active: ["gateway", "qdrant"], color: "#FF4D8D" },
     { id: "pg-to-backup", d: `M 780 235 C 780 360, 650 360, 510 360`, active: ["pg", "backup"], color: "var(--muted)", isDashed: true },
     { id: "mongo-to-backup", d: `M 780 135 C 840 135, 840 380, 510 370`, active: ["mongo", "backup"], color: "var(--muted)", isDashed: true },
@@ -184,7 +184,7 @@ export default function Architecture() {
                   {hoveredNode === "app" && <div><div className="text-muted mb-2 text-xs">SOURCE</div><div className="font-bold text-text">Your Application</div><div className="text-accent mt-2">Active connections: 42</div></div>}
                   {hoveredNode === "gateway" && <div><div className="text-muted mb-2 text-xs">ROUTER</div><div className="font-bold text-text">Global Connection Pooler</div><div className="text-accent mt-2">Latency: ~2ms</div></div>}
                   {hoveredNode === "mongo" && <div><div className="text-muted mb-2 text-xs">DATABASE</div><div className="font-bold text-[#3FCF6D] mb-1">MongoDB</div><div>Region: us-east-1</div><div>Status: Healthy</div></div>}
-                  {hoveredNode === "pg" && <div><div className="text-muted mb-2 text-xs">DATABASE</div><div className="font-bold text-[#4C8DFF] mb-1">PostgreSQL</div><div>Region: eu-central-1</div><div>Status: Healthy</div></div>}
+                  {hoveredNode === "pg" && <div><div className="text-muted mb-2 text-xs">DATABASE</div><div className="font-bold text-[#8B5CF6] mb-1">PostgreSQL</div><div>Region: eu-central-1</div><div>Status: Healthy</div></div>}
                   {hoveredNode === "qdrant" && <div><div className="text-muted mb-2 text-xs">DATABASE</div><div className="font-bold text-[#FF4D8D] mb-1">Qdrant</div><div>Region: ap-south-1</div><div>Status: Healthy</div></div>}
                   {hoveredNode === "backup" && <div><div className="text-muted mb-2 text-xs">STORAGE</div><div className="font-bold text-text mb-1">S3 Bucket</div><div>Retention: 7 days</div><div>State: Syncing WAL</div></div>}
                 </div>

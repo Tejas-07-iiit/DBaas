@@ -19,10 +19,48 @@ export async function listProjects() {
 
 /**
  * Creates a new project workspace.
- * @param data - Name and optional description for the project
+ * @param data - Name, optional description, and hardware resource specs for the dedicated Project VM
  */
-export async function createProject(data: { name: string; description?: string }) {
+export async function createProject(data: {
+  name: string;
+  description?: string;
+  cpuCores?: number;
+  ramMb?: number;
+  storageMb?: number;
+}) {
   return apiClient(endpoints.projects.create, { body: JSON.stringify(data) });
+}
+
+/**
+ * Starts the project host VM.
+ */
+export async function startProjectVm(projectId: string) {
+  const endpoint = { ...endpoints.projects.startVm, path: buildPath(endpoints.projects.startVm.path, { projectId }) };
+  return apiClient(endpoint);
+}
+
+/**
+ * Powers down the project host VM to conserve resources.
+ */
+export async function stopProjectVm(projectId: string) {
+  const endpoint = { ...endpoints.projects.stopVm, path: buildPath(endpoints.projects.stopVm.path, { projectId }) };
+  return apiClient(endpoint);
+}
+
+/**
+ * Restarts the project host VM.
+ */
+export async function restartProjectVm(projectId: string) {
+  const endpoint = { ...endpoints.projects.restartVm, path: buildPath(endpoints.projects.restartVm.path, { projectId }) };
+  return apiClient(endpoint);
+}
+
+/**
+ * Gets real-time VM status and metrics for the project host.
+ */
+export async function getProjectVmStatus(projectId: string) {
+  const endpoint = { ...endpoints.projects.vmStatus, path: buildPath(endpoints.projects.vmStatus.path, { projectId }) };
+  return apiClient(endpoint);
 }
 
 /**

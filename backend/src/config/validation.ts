@@ -11,8 +11,29 @@ export const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional().default(''),
   INFRASTRUCTURE_PROVIDER: z.enum(['mock', 'local', 'central-management']).default('mock'),
   ENCRYPTION_KEY: z.string().optional().default('dbaas-default-dev-encryption-key-32b!'),
-  CENTRAL_MANAGEMENT_URL: z.string().optional().default('http://10.50.0.2:8443'),
+  MANAGEMENT_API_URL: z.string().optional(),
+  CENTRAL_MANAGEMENT_URL: z.string().optional().default('http://192.168.122.7:8080'),
   CENTRAL_MANAGEMENT_API_KEY: z.string().optional().default(''),
+  CORS_ORIGIN: z.string().optional().default('*'),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().optional().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional().default('DBaaS Cloud <no-reply@dbaas.local>'),
+  FRONTEND_URL: z.string().optional().default('http://localhost:3000'),
+  RAZORPAY_KEY_ID: z.string().optional().default('rzp_test_mock_key_id'),
+  RAZORPAY_KEY_SECRET: z.string().optional().default('rzp_test_mock_key_secret'),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional().default('rzp_test_webhook_secret'),
+  RAZORPAY_MODE: z.enum(['test', 'live']).default('test'),
+  PAYMENT_ENABLED: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .default(true)
+    .transform((val) => {
+      if (typeof val === 'boolean') return val;
+      const str = String(val).toLowerCase().trim();
+      return str !== 'false' && str !== '0' && str !== 'disabled';
+    }),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

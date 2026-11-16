@@ -199,7 +199,7 @@ export class LibvirtService {
     vcpus: number,
     memoryMb: number,
     volName: string,
-    network = 'Dbaas-Net',
+    network = 'default',
     options?: CreateDomainOptions,
   ): Promise<void> {
     this.logger.log(`Launching KVM domain '${name}' (vCPUs: ${vcpus}, RAM: ${memoryMb}MB)`);
@@ -222,45 +222,127 @@ export class LibvirtService {
     }
 
     const metaData = `instance-id: ${name}\nlocal-hostname: ${name}\n`;
-    const netConfig = options?.ipAddress
-      ? `version: 2
-ethernets:
-  enp1s0:
-    dhcp4: false
-    addresses:
-      - ${options.ipAddress}/24
-    routes:
-      - to: default
-        via: ${options.gateway || '10.50.0.1'}
-    nameservers:
+    const ipAddr = options?.ipAddress;
+    const gateway = options?.gateway || '192.168.122.1';
+
+    const netConfig = ipAddr
+      ? `network:
+  version: 2
+  ethernets:
+    id0:
+      match:
+        name: "en*"
+      dhcp4: false
       addresses:
-        - 8.8.8.8
-        - 1.1.1.1
+        - "${ipAddr}/24"
+      routes:
+        - to: default
+          via: "${gateway}"
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1
 `
-      : `version: 2
-ethernets:
-  enp1s0:
-    dhcp4: true
-    dhcp4-overrides:
-      use-routes: false
-      use-dns: false
-    routes:
-      - to: default
-        via: ${options?.gateway || '10.50.0.1'}
-    nameservers:
-      addresses:
-        - 8.8.8.8
-        - 1.1.1.1
+      : `network:
+  version: 2
+  ethernets:
+    id0:
+      match:
+        name: "en*"
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false
+        use-dns: false
+      routes:
+        - to: default
+          via: "${gateway}"
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1
 `;
 
     const dbPwd = options?.dbPassword || '5a2191ba39192ca6c408598714ad34ac';
     const rootPwd = options?.adminPassword || '123';
     const engine = (options?.dbEngine || 'POSTGRESQL').toUpperCase();
 
+    const pubKey = fs.existsSync('/home/tejas-ambaliya/.ssh/id_ed25519.pub')
+      ? fs.readFileSync('/home/tejas-ambaliya/.ssh/id_ed25519.pub', 'utf-8').trim()
+      : 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFbF9pepx3wsarif3MkwJy8fTECxYo/q9nWVOly1Xaxd useaionex@gmail.com';
+
     let dbSetupScript = '';
-    if (engine === 'POSTGRESQL' || engine === 'POSTGRES') {
+    const isMultiEngine = engine === 'MULTI' || engine === 'PROJECT' || engine === 'PROJECT_HOST' || engine === 'BOTH' || name.startsWith('vm-proj');
+
+    if (isMultiEngine) {
       dbSetupScript = `#!/bin/bash
+exec > /var/log/db_setup.log 2>&1
+echo '=== Multi-Database Project Host VM Setup Started on ' $(hostname) ' ==='
 set -x
+
+mkdir -p /etc/ssh/sshd_config.d
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-pwauth.conf
+echo 'KbdInteractiveAuthentication yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
+echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
+systemctl restart ssh.socket || systemctl restart ssh || true
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y postgresql postgresql-contrib curl gnupg
+
+# 1. Configure PostgreSQL
+CONF_FILE=$(find /etc/postgresql/ -name postgresql.conf 2>/dev/null | head -n 1)
+HBA_FILE=$(find /etc/postgresql/ -name pg_hba.conf 2>/dev/null | head -n 1)
+if [ -n "$CONF_FILE" ]; then
+  sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" "$CONF_FILE"
+  sed -i "s/listen_addresses = 'localhost'/listen_addresses = '*'/" "$CONF_FILE"
+fi
+if [ -n "$HBA_FILE" ]; then
+  echo "host all all 0.0.0.0/0 md5" >> "$HBA_FILE"
+fi
+
+systemctl restart postgresql
+sleep 2
+su - postgres -c "psql -c \\"CREATE USER dbaas_admin WITH ENCRYPTED PASSWORD '${dbPwd}';\\""
+su - postgres -c "psql -c \\"ALTER USER dbaas_admin WITH SUPERUSER;\\""
+su - postgres -c "psql -c \\"CREATE DATABASE dbaas_main OWNER dbaas_admin;\\""
+systemctl restart postgresql
+
+# 2. Configure MongoDB 7.0
+curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor --yes -o /usr/share/keyrings/mongodb-server-7.0.gpg
+echo 'deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse' > /etc/apt/sources.list.d/mongodb-org-7.0.list
+apt-get update
+apt-get install -y mongodb-org
+sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
+systemctl daemon-reload
+systemctl enable --now mongod
+sleep 3
+mongosh admin --eval '
+  db.createUser({
+    user: "dbaas_admin",
+    pwd: "${dbPwd}",
+    roles: [
+      { role: "root", db: "admin" },
+      { role: "readWriteAnyDatabase", db: "admin" },
+      { role: "dbAdminAnyDatabase", db: "admin" }
+    ]
+  });
+'
+sed -i 's/#security:/security:\\n  authorization: enabled/' /etc/mongod.conf
+systemctl restart mongod
+echo '=== ALL DONE: Multi-Host Ready with PostgreSQL (5432) & MongoDB (27017) ==='
+`;
+    } else if (engine === 'POSTGRESQL' || engine === 'POSTGRES') {
+      dbSetupScript = `#!/bin/bash
+exec > /var/log/db_setup.log 2>&1
+echo '=== VM Setup Started on ' $(hostname) ' ==='
+set -x
+
+mkdir -p /etc/ssh/sshd_config.d
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-pwauth.conf
+echo 'KbdInteractiveAuthentication yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
+echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
+systemctl restart ssh.socket || systemctl restart ssh || true
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y postgresql postgresql-contrib
@@ -281,10 +363,20 @@ su - postgres -c "psql -c \\"CREATE USER dbaas_admin WITH ENCRYPTED PASSWORD '${
 su - postgres -c "psql -c \\"ALTER USER dbaas_admin WITH SUPERUSER;\\""
 su - postgres -c "psql -c \\"CREATE DATABASE dbaas_main OWNER dbaas_admin;\\""
 systemctl restart postgresql
+echo '=== ALL DONE: PostgreSQL is live on port 5432 ==='
 `;
     } else {
       dbSetupScript = `#!/bin/bash
+exec > /var/log/db_setup.log 2>&1
+echo '=== VM Setup Started on ' $(hostname) ' ==='
 set -x
+
+mkdir -p /etc/ssh/sshd_config.d
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-pwauth.conf
+echo 'KbdInteractiveAuthentication yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
+echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
+systemctl restart ssh.socket || systemctl restart ssh || true
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y curl gnupg
@@ -309,39 +401,24 @@ mongosh admin --eval '
 '
 sed -i 's/#security:/security:\\n  authorization: enabled/' /etc/mongod.conf
 systemctl restart mongod
+echo '=== ALL DONE: MongoDB is live on port 27017 ==='
 `;
     }
 
     const userData = `#cloud-config
+ssh_pwauth: true
 password: "${rootPwd}"
 chpasswd:
-  list: |
-    ubuntu:${rootPwd}
-    root:${rootPwd}
-  expire: False
-ssh_pwauth: true
-bootcmd:
-  - ip route replace default via 10.50.0.1 || true
-  - mkdir -p /etc/ssh/sshd_config.d
-  - echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-pwauth.conf
-  - echo 'KbdInteractiveAuthentication yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
-  - echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
-  - sed -i "s/#DNS=/DNS=8.8.8.8 1.1.1.1/" /etc/systemd/resolved.conf || true
-  - systemctl restart systemd-resolved || true
-  - systemctl restart ssh.socket || systemctl restart ssh || true
-runcmd:
-  - ip route replace default via 10.50.0.1 || true
-  - mkdir -p /etc/ssh/sshd_config.d
-  - echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/01-pwauth.conf
-  - echo 'KbdInteractiveAuthentication yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
-  - echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config.d/01-pwauth.conf
-  - systemctl restart ssh.socket || systemctl restart ssh || true
-  - /root/setup_db.sh
+  expire: false
+ssh_authorized_keys:
+  - ${pubKey}
 write_files:
   - path: /root/setup_db.sh
     permissions: '0755'
     content: |
 ${dbSetupScript.split('\n').map((l) => (l ? '      ' + l : '')).join('\n')}
+runcmd:
+  - /root/setup_db.sh
 `;
 
     const metaPath = path.join(ciDir, 'meta-data');

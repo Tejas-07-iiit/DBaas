@@ -20,16 +20,16 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { 
   Check, FolderKanban, Plus, FileText, Database, CreditCard, 
-  ArrowRight, ShieldCheck, Sparkles, Activity
+  ArrowRight, ShieldCheck, Sparkles, Activity, Server, Cpu, HardDrive
 } from "lucide-react";
 
-function StatCard({ title, value, icon: Icon, isLoading, error, onRetry, linkHref, linkLabel }: any) {
+function StatCard({ title, value, subtitle, icon: Icon, isLoading, error, onRetry, linkHref, linkLabel }: any) {
   return (
-    <div className="bg-surface/50 border border-border/50 rounded-xl p-5 flex flex-col justify-between">
+    <div className="bg-surface/70 border border-border/70 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/40 transition-all duration-200 shadow-sm group">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-muted uppercase tracking-wider">{title}</span>
+        <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">{title}</span>
         {Icon && (
-          <div className="w-8 h-8 rounded-lg bg-surface-2 border border-border/50 flex items-center justify-center text-muted">
+          <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:border-accent group-hover:shadow-[0_0_12px_rgba(16,185,129,0.25)] transition-all">
             <Icon size={16} />
           </div>
         )}
@@ -42,16 +42,20 @@ function StatCard({ title, value, icon: Icon, isLoading, error, onRetry, linkHre
           Unavailable <button onClick={onRetry} className="underline ml-1 font-semibold">Retry</button>
         </div>
       ) : (
-        <div className="text-2xl font-bold text-text tracking-tight mb-1">{value}</div>
+        <div className="text-2xl font-bold text-text tracking-tight mb-0.5">{value}</div>
+      )}
+
+      {subtitle && !isLoading && !error && (
+        <div className="text-[11px] text-muted font-mono">{subtitle}</div>
       )}
 
       {linkHref && !isLoading && !error ? (
-        <Link href={linkHref} className="text-xs text-accent hover:underline flex items-center gap-1 font-medium mt-2">
+        <Link href={linkHref} className="text-xs text-accent hover:underline flex items-center gap-1 font-semibold mt-3 pt-2 border-t border-border/30">
           <span>{linkLabel}</span>
           <ArrowRight size={12} />
         </Link>
       ) : (
-        <div className="h-4 mt-2"></div>
+        <div className="h-1 mt-2"></div>
       )}
     </div>
   );
@@ -86,6 +90,7 @@ export default function DashboardOverview() {
 
   const projects = projQuery.data || [];
   const projectsYouOwn = projects.filter((p: any) => p.role === 'Owner');
+  const runningVms = projects.filter((p: any) => p.status === 'RUNNING');
   const recentProjects = [...projects].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
   
   const lastProjectExists = lastOpenedId && projects.find((p: any) => p.id === lastOpenedId);
@@ -93,14 +98,14 @@ export default function DashboardOverview() {
   return (
     <div className="space-y-8">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/30">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text">Overview</h1>
           <p className="text-muted text-xs mt-1">Manage all cloud database workspaces, instances, and billing.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-accent text-bg font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity self-start sm:self-auto shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white font-medium text-xs rounded-xl transition-colors self-start sm:self-auto shadow-sm"
         >
           <Plus size={15} />
           <span>New Project</span>
@@ -108,10 +113,11 @@ export default function DashboardOverview() {
       </div>
 
       {/* STATS ROW */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Total Projects" 
           value={projects.length} 
+          subtitle="Provisioned workspaces"
           icon={FolderKanban}
           isLoading={projQuery.isLoading} 
           error={projQuery.error} 
@@ -120,8 +126,18 @@ export default function DashboardOverview() {
           linkLabel="View all projects"
         />
         <StatCard 
+          title="Host VMs Running" 
+          value={runningVms.length} 
+          subtitle={`${projects.length - runningVms.length} stopped / suspended`}
+          icon={Server}
+          isLoading={projQuery.isLoading} 
+          error={projQuery.error} 
+          onRetry={projQuery.refetch}
+        />
+        <StatCard 
           title="Owned By You" 
           value={projectsYouOwn.length} 
+          subtitle="Direct workspace ownership"
           icon={ShieldCheck}
           isLoading={projQuery.isLoading} 
           error={projQuery.error} 
@@ -130,6 +146,7 @@ export default function DashboardOverview() {
         <StatCard 
           title="Subscription Tier" 
           value={subQuery.data?.planName || 'Free Sandbox'} 
+          subtitle="Platform billing status"
           icon={CreditCard}
           isLoading={subQuery.isLoading} 
           error={subQuery.error} 
@@ -141,21 +158,27 @@ export default function DashboardOverview() {
 
       {/* CONTINUE STRIP */}
       {lastProjectExists && (
-        <div className="bg-surface/60 border border-accent/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0">
-              <FolderKanban size={20} />
+        <div className="bg-gradient-to-r from-surface-2/90 via-surface/90 to-surface-2/90 border border-accent/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+              <FolderKanban size={22} />
             </div>
             <div>
-              <div className="text-[10px] font-mono text-accent uppercase tracking-wider font-semibold">
-                Quick Resume
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-accent uppercase tracking-wider font-bold">
+                  Quick Resume
+                </span>
+                <span className={`w-1.5 h-1.5 rounded-full ${lastProjectExists.status === 'RUNNING' ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
               </div>
-              <div className="font-bold text-sm text-text">{lastProjectExists.name}</div>
+              <div className="font-bold text-base text-text mt-0.5">{lastProjectExists.name}</div>
+              <div className="text-[11px] text-muted font-mono mt-0.5">
+                {lastProjectExists.cpuCores} vCPU · {Math.round(lastProjectExists.ramMb / 1024)} GB RAM · {Math.round(lastProjectExists.storageMb / 1024)} GB NVMe
+              </div>
             </div>
           </div>
           <Link 
             href={`/dashboard/projects/${lastProjectExists.id}`} 
-            className="px-4 py-2 bg-accent text-bg font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5"
+            className="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-medium text-xs rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <span>Open Console</span>
             <ArrowRight size={14} />
@@ -170,15 +193,15 @@ export default function DashboardOverview() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FolderKanban size={16} className="text-accent" />
-              <h2 className="text-sm font-semibold text-text uppercase tracking-wider">Recent Projects</h2>
+              <h2 className="text-xs font-semibold text-text uppercase tracking-wider">Recent Workspaces</h2>
             </div>
-            <Link href="/dashboard/projects" className="text-xs text-accent hover:underline flex items-center gap-1">
+            <Link href="/dashboard/projects" className="text-xs text-accent hover:underline flex items-center gap-1 font-semibold">
               <span>View all ({projects.length})</span>
               <ArrowRight size={12} />
             </Link>
           </div>
 
-          <div className="bg-surface/40 border border-border/50 rounded-xl overflow-hidden">
+          <div className="bg-surface/60 border border-border/70 rounded-2xl overflow-hidden shadow-sm">
             {projQuery.isLoading ? (
               <div className="p-12 text-center text-muted text-xs">Loading projects...</div>
             ) : projQuery.error ? (
@@ -188,7 +211,7 @@ export default function DashboardOverview() {
                 title="No projects provisioned yet" 
                 description="Create your first project workspace to begin deploying MongoDB, PostgreSQL, and Qdrant clusters."
                 action={
-                  <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-accent text-bg rounded-lg text-xs font-semibold hover:opacity-90">
+                  <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-medium">
                     Create Project
                   </button>
                 } 
@@ -196,21 +219,24 @@ export default function DashboardOverview() {
             ) : (
               <div className="divide-y divide-border/40">
                 {recentProjects.map((p: any) => (
-                  <div key={p.id} className="p-4 flex items-center justify-between hover:bg-surface-2/40 transition-colors">
+                  <div key={p.id} className="p-4 flex items-center justify-between hover:bg-surface-2/60 transition-colors">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2.5">
                         <Link href={`/dashboard/projects/${p.id}`} className="font-semibold text-sm text-text hover:text-accent transition-colors">
                           {p.name}
                         </Link>
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.status === 'RUNNING' ? 'bg-emerald-400' : p.status === 'PROVISIONING' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-500'}`} />
                         <RoleBadge role={p.role} />
                       </div>
-                      <div className="text-xs text-muted font-mono">
-                        Created {new Date(p.createdAt).toLocaleDateString()}
+                      <div className="text-[11px] text-muted font-mono flex items-center gap-2">
+                        <span>{p.cpuCores} vCPU · {Math.round(p.ramMb / 1024)} GB RAM</span>
+                        <span>·</span>
+                        <span>Created {new Date(p.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                     <Link 
                       href={`/dashboard/projects/${p.id}`} 
-                      className="px-3 py-1.5 bg-surface-2 hover:bg-surface-2/80 border border-border/60 rounded-lg text-xs font-medium text-text hover:text-accent transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 bg-surface-2 hover:bg-surface-2/80 border border-border/70 rounded-xl text-xs font-semibold text-text hover:text-accent transition-colors flex items-center gap-1.5"
                     >
                       <span>Console</span>
                       <ArrowRight size={12} />

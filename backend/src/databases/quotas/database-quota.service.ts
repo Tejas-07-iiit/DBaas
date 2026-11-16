@@ -1,5 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { DatabaseStatus, DatabaseType, SubscriptionTier } from '@prisma/client';
+import { Injectable, BadRequestException, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { DatabaseStatus, DatabaseType, SubscriptionTier, SubscriptionStatus } from '@prisma/client';
 
 export interface PlanQuota {
   maxDatabases: number;
@@ -50,6 +51,7 @@ export const PLAN_QUOTAS: Record<SubscriptionTier, PlanQuota> = {
 
 @Injectable()
 export class DatabaseQuotaService {
+  constructor(@Optional() private readonly configService?: ConfigService) {}
   /**
    * Retrieves quota limits for a given subscription tier.
    */
@@ -73,10 +75,47 @@ export class DatabaseQuotaService {
   ): Promise<void> {
     const subscription = await tx.subscription.findUnique({
       where: { projectId },
+      include: { plan: true },
     });
 
     const tier = subscription?.tier || SubscriptionTier.FREE;
-    const limits = this.getQuotaForTier(tier);
+
+    const paymentEnabled = this.configService
+      ? this.configService.get<any>('paymentEnabled') !== false &&
+        this.configService.get<any>('paymentEnabled') !== 'false'
+      : true;
+
+    // Check subscription status restrictions on new provisioning (only if payments are enabled)
+    if (subscription && paymentEnabled) {
+      if (subscription.status === SubscriptionStatus.PAST_DUE) {
+        // Configurable payment grace period (7 days)
+        const graceDays = 7;
+        const gracePeriodEnd = subscription.currentPeriodEnd
+          ? new Date(subscription.currentPeriodEnd.getTime() + graceDays * 86400000)
+          : null;
+        if (gracePeriodEnd && Date.now() > gracePeriodEnd.getTime()) {
+          throw new BadRequestException(
+            `New database provisioning is suspended: Subscription payment is past due and the ${graceDays}-day grace period has elapsed. Existing databases remain running. Please settle the pending payment to resume provisioning.`,
+          );
+        }
+      } else if (subscription.status === SubscriptionStatus.CANCELED) {
+        if (subscription.currentPeriodEnd && Date.now() > subscription.currentPeriodEnd.getTime()) {
+          throw new BadRequestException(
+            'New database provisioning is suspended: Subscription has ended. Existing databases remain intact. Please upgrade your subscription to provision new resources.',
+          );
+        }
+      }
+    }
+
+    const limits = subscription?.plan
+      ? {
+          maxDatabases: subscription.plan.maxDatabases,
+          maxCpuCores: subscription.plan.maxCpuCores,
+          maxRamMb: subscription.plan.maxRamMb,
+          maxStorageMb: subscription.plan.maxStorageMb,
+          allowedEngines: this.getQuotaForTier(tier).allowedEngines,
+        }
+      : this.getQuotaForTier(tier);
 
     // Verify engine permission
     if (!limits.allowedEngines.includes(requested.type)) {

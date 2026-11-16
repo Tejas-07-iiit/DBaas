@@ -12,6 +12,7 @@ import MobileMenu from "./MobileMenu";
 import { mainNavLinks } from "@/data/navigation";
 import { Container } from "@/components/ui/Container";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const UNDERLINE_ID = "nav-underline";
 
@@ -105,8 +106,9 @@ export default function Navbar() {
     height: "var(--nav-h)",
     display: "flex",
     alignItems: "center",
-    background: scrolled ? "rgba(5,8,15,0.92)" : "rgba(5,8,15,0.7)",
+    background: scrolled ? "var(--nav-bg-scrolled)" : "var(--nav-bg)",
     backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
     borderBottom: scrolled ? "1px solid var(--border-bright)" : "1px solid var(--border)",
     transition: "background 0.3s, border-color 0.3s",
   };
@@ -176,6 +178,8 @@ export default function Navbar() {
               <Headphones size={15} />
               Support
             </Link>
+
+            <ThemeToggle variant="icon" />
             
             {status === "loading" ? (
               <div style={{ width: 198, height: 40 }} />
@@ -187,7 +191,7 @@ export default function Navbar() {
                 <button 
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   onMouseEnter={() => setShowUserMenu(true)}
-                  className="w-9 h-9 rounded-full bg-accent text-[#05080F] flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform"
+                  className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform shadow-xs"
                 >
                   {user?.name?.[0]?.toUpperCase() || 'U'}
                 </button>
@@ -208,9 +212,8 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/login"
-                  style={{ padding: "0.45rem 1rem", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: "0.88rem", textDecoration: "none", transition: "border-color 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
+                  style={{ padding: "0.45rem 1rem", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: "0.88rem", textDecoration: "none", transition: "all 0.2s" }}
+                  className="hover:border-primary-light hover:bg-surface-elevated"
                 >
                   Log in
                 </Link>
@@ -222,7 +225,7 @@ export default function Navbar() {
                   onMouseMove={handleMagMove}
                   onMouseLeave={() => setMag({ x: 0, y: 0 })}
                   className="glow-accent"
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "0.5rem 1.1rem", borderRadius: 9, background: "var(--accent)", color: "#05080F", fontSize: "0.88rem", fontFamily: "var(--font-heading)", fontWeight: 700, textDecoration: "none", cursor: "pointer" }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "0.5rem 1.1rem", borderRadius: 9, background: "var(--primary)", color: "#FFFFFF", fontSize: "0.88rem", fontFamily: "var(--font-heading)", fontWeight: 700, textDecoration: "none", cursor: "pointer" }}
                 >
                   Get started
                   <motion.span whileHover={{ x: 3 }} style={{ display: "flex" }}>
@@ -233,16 +236,18 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* MOBILE hamburger */}
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="flex lg:hidden"
-            aria-label="Open menu"
-            aria-expanded={mobileOpen}
-            style={{ background: "none", border: "1px solid var(--border)", color: "var(--text)", borderRadius: 8, padding: "8px", cursor: "pointer" }}
-          >
-            <Menu size={20} />
-          </button>
+          {/* MOBILE controls */}
+          <div className="flex lg:hidden items-center gap-2">
+            <ThemeToggle variant="icon" />
+            <button
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={mobileOpen}
+              style={{ background: "none", border: "1px solid var(--border)", color: "var(--text)", borderRadius: 8, padding: "8px", cursor: "pointer" }}
+            >
+              <Menu size={20} />
+            </button>
+          </div>
         </Container>
 
         {/* NEW PRODUCT MEGA MENU */}

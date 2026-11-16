@@ -31,18 +31,34 @@ export const endpoints = {
     get: { path: env.PROJECTS_GET_ENDPOINT as string, method: 'GET' } as Endpoint, // PROJ-03
     update: { path: env.PROJECTS_UPDATE_ENDPOINT as string, method: 'PUT' } as Endpoint, // PROJ-04
     delete: { path: env.PROJECTS_DELETE_ENDPOINT as string, method: 'DELETE' } as Endpoint, // PROJ-05
+    startVm: { path: '/projects/:projectId/start', method: 'POST' } as Endpoint,
+    stopVm: { path: '/projects/:projectId/stop', method: 'POST' } as Endpoint,
+    restartVm: { path: '/projects/:projectId/restart', method: 'POST' } as Endpoint,
+    vmStatus: { path: '/projects/:projectId/vm-status', method: 'GET' } as Endpoint,
   },
   members: {
     list: { path: env.MEMBERS_LIST_ENDPOINT as string, method: 'GET' } as Endpoint, // TEAM-01
     add: { path: env.MEMBERS_ADD_ENDPOINT as string, method: 'POST' } as Endpoint, // TEAM-02
     updateRole: { path: env.MEMBERS_UPDATE_ROLE_ENDPOINT as string, method: 'PUT' } as Endpoint, // TEAM-03
     remove: { path: env.MEMBERS_REMOVE_ENDPOINT as string, method: 'DELETE' } as Endpoint, // TEAM-04
+    invitations: { path: '/projects/:projectId/invitations', method: 'GET' } as Endpoint,
+    createInvitation: { path: '/projects/:projectId/invitations', method: 'POST' } as Endpoint,
+    revokeInvitation: { path: '/projects/:projectId/invitations/:invitationId', method: 'DELETE' } as Endpoint,
+    resendInvitation: { path: '/projects/:projectId/invitations/:invitationId/resend', method: 'POST' } as Endpoint,
+  },
+  invitations: {
+    get: { path: '/invitations/:token', method: 'GET' } as Endpoint,
+    accept: { path: '/invitations/:token/accept', method: 'POST' } as Endpoint,
+    decline: { path: '/invitations/:token/decline', method: 'POST' } as Endpoint,
+    myPending: { path: '/invitations/my-pending', method: 'GET' } as Endpoint,
   },
   subscription: {
     listPlans: { path: env.PLANS_LIST_ENDPOINT as string, method: 'GET' } as Endpoint, // BILL-01
     get: { path: env.SUBSCRIPTION_GET_ENDPOINT as string, method: 'GET' } as Endpoint, // BILL-02
     checkout: { path: env.SUBSCRIPTION_CHECKOUT_ENDPOINT as string, method: 'POST' } as Endpoint, // BILL-03
-    cancel: { path: env.SUBSCRIPTION_CANCEL_ENDPOINT as string, method: 'POST' } as Endpoint, // BILL-04
+    verify: { path: '/subscription/verify', method: 'POST' } as Endpoint, // BILL-04
+    cancel: { path: env.SUBSCRIPTION_CANCEL_ENDPOINT as string, method: 'POST' } as Endpoint, // BILL-05
+    payments: { path: '/subscription/payments', method: 'GET' } as Endpoint, // BILL-06
   },
   databases: {
     list: { path: env.DATABASES_LIST_ENDPOINT as string, method: 'GET' } as Endpoint, // DB-01

@@ -30,7 +30,7 @@ export async function createDatabase(projectId: string, data: any) {
     type: (data.type || data.engine || 'POSTGRESQL').toUpperCase(),
     cpuCores: Number(data.cpuCores || data.cpu) || 1,
     ramMb: Number(data.ramMb || data.memoryMb) || 1024,
-    storageMb: data.storageMb ? Number(data.storageMb) : (data.storageGb ? Number(data.storageGb) * 1024 : 5120),
+    storageMb: data.storageMb ? Number(data.storageMb) : (data.storageGb ? Number(data.storageGb) * 1024 : 10240),
     ...(data.version ? { version: data.version } : {})
   };
   return apiClient(endpoints.databases.create, { body: JSON.stringify(payload) }, { projectId });

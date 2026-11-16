@@ -13,7 +13,7 @@ export function CtaBand() {
   const words = footerData.cta.headingPart1.split(" ").concat([footerData.cta.headingHighlight], footerData.cta.headingPart2.split(" ").filter(Boolean));
   
   return (
-    <div className="relative py-32 overflow-hidden border-b border-border bg-[#05080F]">
+    <div className="relative py-32 overflow-hidden border-b border-border bg-surface/40">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none">
         <motion.div animate={{ opacity: [0.1, 0.4, 0.1], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 8 }} className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[100px]" />
         <motion.div animate={{ opacity: [0.1, 0.3, 0.1], scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 12, delay: 2 }} className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF4D8D]/20 rounded-full blur-[100px]" />
@@ -63,7 +63,7 @@ function SupportBox() {
     <div className="bg-surface/50 border border-border/80 rounded-2xl p-6 relative overflow-hidden backdrop-blur-sm flex flex-col justify-between shadow-2xl hover:border-accent/40 transition-all duration-300 group">
       {/* Decorative ambient gradients */}
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-accent/10 rounded-full blur-2xl pointer-events-none group-hover:bg-accent/20 transition-all duration-500" />
-      <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#4C8DFF]/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">

@@ -64,4 +64,23 @@ export class FirebaseAdminService implements OnModuleInit {
       );
     }
   }
+
+  async deleteUser(uid: string): Promise<void> {
+    if (!this.app) {
+      this.logger.warn(
+        `Firebase Admin SDK not initialized; skipping Firebase user deletion for ${uid}`,
+      );
+      return;
+    }
+
+    try {
+      await admin.auth(this.app).deleteUser(uid);
+      this.logger.log(`Deleted user ${uid} from Firebase Auth`);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to delete user ${uid} from Firebase Auth: ${(error as Error).message}`,
+      );
+    }
+  }
 }
+

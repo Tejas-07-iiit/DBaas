@@ -36,7 +36,7 @@ export const createDatabaseSchema = z
       .int('Storage must be an integer')
       .min(1024, 'Storage must be at least 1024 MB')
       .max(102400, 'Storage cannot exceed 102400 MB')
-      .default(5120),
+      .default(10240),
   })
   .strict();
 

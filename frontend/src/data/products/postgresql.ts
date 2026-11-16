@@ -3,7 +3,7 @@ import { ProductContent } from "./types";
 export const postgresqlContent: ProductContent = {
   id: "postgres",
   name: "PostgreSQL",
-  accentColor: "#4C8DFF",
+  accentColor: "#8B5CF6",
   hero: {
     breadcrumb: "Product / PostgreSQL",
     h1Part1: "Relational power. ",

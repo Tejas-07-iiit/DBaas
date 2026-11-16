@@ -3,15 +3,22 @@
 // Think of it as the "frame": navbar at top, backgrounds behind, children in the middle.
 
 import type { Metadata } from "next";
-import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import ScrollReset from "@/components/effects/ScrollReset";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 
 // Load fonts through Next.js (this prevents text flickering on load)
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -21,7 +28,7 @@ const spaceGrotesk = Space_Grotesk({
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
   variable: "--loaded-mono",
   display: "swap",
 });
@@ -36,22 +43,24 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`} data-theme="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
-        <QueryProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <ScrollReset />
-              <SiteChrome>
-                {children}
-              </SiteChrome>
-            </ToastProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <ScrollReset />
+                <SiteChrome>
+                  {children}
+                </SiteChrome>
+              </ToastProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

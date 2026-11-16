@@ -1,6 +1,6 @@
 /**
  * @file src/app/dashboard/subscription/checkout-demo/page.tsx
- * @description Simulated Stripe checkout flow for Demo Mode.
+ * @description Simulated Razorpay checkout flow for Demo Mode.
  * Emulates the payment confirmation and automatically updates mock subscription state in localStorage.
  */
 
@@ -60,7 +60,7 @@ export default function CheckoutDemo() {
           <div className="text-[10px] text-muted uppercase tracking-wider font-semibold">Selected Tier</div>
           <div className="flex justify-between items-baseline">
             <span className="text-lg font-bold text-text">{plan.name}</span>
-            <span className="text-sm font-bold text-accent">${plan.price} <span className="text-xs text-muted font-normal">/{plan.interval}</span></span>
+            <span className="text-sm font-bold text-accent">₹{plan.price} <span className="text-xs text-muted font-normal">/{plan.interval}</span></span>
           </div>
           <p className="text-xs text-muted leading-relaxed pt-1 border-t border-border/30">
             {plan.description}
@@ -70,7 +70,7 @@ export default function CheckoutDemo() {
         <div className="space-y-2.5">
           <button 
             onClick={confirm} 
-            className="w-full py-2.5 px-4 bg-accent text-bg rounded-lg font-semibold text-xs hover:opacity-90 transition-opacity"
+            className="w-full py-2.5 px-4 bg-primary hover:bg-primary-hover text-white rounded-xl font-medium text-xs shadow-sm transition-colors"
           >
             Confirm Plan Upgrade (Demo)
           </button>

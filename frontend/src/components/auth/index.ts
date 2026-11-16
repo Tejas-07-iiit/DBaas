@@ -5,3 +5,4 @@
 
 export { AuthShell } from "./AuthShell";
 export { PasswordInput } from "./PasswordInput";
+export { OAuthButtons } from "./OAuthButtons";

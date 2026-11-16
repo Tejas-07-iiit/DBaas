@@ -130,7 +130,7 @@ export function ProductPageTemplate({ content, HeroBackground, Playground, Featu
               </motion.p>
               <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-4 mb-12">
                 <Button 
-                  className="bg-[var(--engine)] text-[#05080F] hover:shadow-[0_0_20px_var(--engine)]"
+                  className="bg-[var(--engine)] text-white font-semibold hover:shadow-[0_0_20px_var(--engine)]"
                   onClick={handleCreateDatabase}
                 >
                   {content.hero.primaryCta}
@@ -257,7 +257,7 @@ export function ProductPageTemplate({ content, HeroBackground, Playground, Featu
                     className="flex-1 flex flex-col"
                   >
                     <p className="text-lg text-text mb-8">{activeCaseData.description}</p>
-                    <div className="bg-[#05080F] p-6 rounded-lg border border-border/50 font-mono text-sm text-accent whitespace-pre-wrap flex-1 mb-8">
+                    <div className="bg-surface-elevated/40 p-6 rounded-lg border border-border/50 font-mono text-sm text-accent whitespace-pre-wrap flex-1 mb-8">
                       {activeCaseData.sampleDocument}
                     </div>
                     <div className="text-[var(--engine)] font-medium mt-auto flex items-center gap-2">
@@ -276,7 +276,7 @@ export function ProductPageTemplate({ content, HeroBackground, Playground, Featu
       <Section className="py-24 bg-surface/30">
         <Container>
           <SectionHeader title="Connect in seconds" className="text-center" />
-          <Card className="max-w-4xl mx-auto p-0 overflow-hidden bg-[#05080F]">
+          <Card className="max-w-4xl mx-auto p-0 overflow-hidden bg-surface">
             <div className="flex items-center justify-between border-b border-border/50 px-4 bg-surface-2/50">
               <div className="flex gap-2">
                 {content.codeSnippets.map(snippet => (
@@ -396,7 +396,7 @@ export function ProductPageTemplate({ content, HeroBackground, Playground, Featu
                <h2 className="text-3xl font-bold mb-6">{content.closing.text}</h2>
                <Button 
                  size="lg" 
-                 className="bg-[var(--engine)] text-[#05080F] hover:shadow-[0_0_20px_var(--engine)]"
+                 className="bg-[var(--engine)] text-white font-semibold hover:shadow-[0_0_20px_var(--engine)]"
                  onClick={handleCreateDatabase}
                >
                  {content.closing.cta}

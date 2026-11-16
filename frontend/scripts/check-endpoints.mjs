@@ -4,7 +4,9 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const envPath = path.join(__dirname, '../.env.local');
+const envPath = fs.existsSync(path.join(__dirname, '../.env'))
+  ? path.join(__dirname, '../.env')
+  : path.join(__dirname, '../.env.local');
 
 const EXPECTED_ENDPOINTS = [
   'AUTH_REGISTER_ENDPOINT', 'AUTH_LOGIN_ENDPOINT', 'AUTH_REFRESH_ENDPOINT', 'AUTH_LOGOUT_ENDPOINT', 'AUTH_ME_ENDPOINT', 'AUTH_FORGOT_PASSWORD_ENDPOINT', 'AUTH_RESET_PASSWORD_ENDPOINT',
@@ -18,7 +20,7 @@ const EXPECTED_ENDPOINTS = [
 ];
 
 if (!fs.existsSync(envPath)) {
-  console.error('Error: .env.local not found');
+  console.error('Error: .env not found');
   process.exit(1);
 }
 

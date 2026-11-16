@@ -70,4 +70,39 @@ export class ProjectsController {
   ) {
     await this.projectsService.deleteProject(firebaseUser, params.projectId);
   }
+
+  @Post(':projectId/start')
+  @HttpCode(HttpStatus.OK)
+  async startProjectVm(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(projectIdParamSchema)) params: ProjectIdParamDto,
+  ) {
+    return this.projectsService.startProjectVm(firebaseUser, params.projectId);
+  }
+
+  @Post(':projectId/stop')
+  @HttpCode(HttpStatus.OK)
+  async stopProjectVm(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(projectIdParamSchema)) params: ProjectIdParamDto,
+  ) {
+    return this.projectsService.stopProjectVm(firebaseUser, params.projectId);
+  }
+
+  @Post(':projectId/restart')
+  @HttpCode(HttpStatus.OK)
+  async restartProjectVm(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(projectIdParamSchema)) params: ProjectIdParamDto,
+  ) {
+    return this.projectsService.restartProjectVm(firebaseUser, params.projectId);
+  }
+
+  @Get(':projectId/vm-status')
+  async getProjectVmStatus(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(projectIdParamSchema)) params: ProjectIdParamDto,
+  ) {
+    return this.projectsService.getProjectVmStatus(firebaseUser, params.projectId);
+  }
 }

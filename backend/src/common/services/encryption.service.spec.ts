@@ -40,7 +40,8 @@ describe('EncryptionService', () => {
     const [iv, authTag, data] = encrypted.split(':');
 
     // Tamper with encrypted data
-    const tamperedData = data.slice(0, -2) + 'aa';
+    const lastChar = data.slice(-1);
+    const tamperedData = data.slice(0, -1) + (lastChar === 'a' ? 'b' : 'a');
     const tamperedCiphertext = `${iv}:${authTag}:${tamperedData}`;
 
     expect(() => service.decrypt(tamperedCiphertext)).toThrow();

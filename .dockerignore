@@ -1,0 +1,11 @@
+# Exclude host API and local testing from Docker build context
+dbaas-host-api
+test1
+.git
+.vscode
+.idea
+*.md
+!README.md
+*.png
+*.html
+*.xlsx

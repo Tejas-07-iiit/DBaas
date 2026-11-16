@@ -67,7 +67,7 @@ export default function DatabasesPage({
     return () => clearInterval(int);
   }, [hasTransitional, dbQuery]);
 
-  const isMember = projQuery.data?.role === "Member";
+  const isMember = (projQuery.data?.role || "").toUpperCase() === "MEMBER";
 
   const deleteMut = useMutation({
     mutationFn: (databaseId: string) => deleteDatabase(projectId, databaseId),
@@ -118,7 +118,7 @@ export default function DatabasesPage({
             <button
               disabled={isMember}
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-bg rounded-lg font-semibold text-xs disabled:opacity-40 hover:opacity-90 transition-opacity shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl font-medium text-xs disabled:opacity-40 transition-colors shadow-sm"
             >
               <Plus size={15} />
               <span>New Database</span>
@@ -181,7 +181,7 @@ export default function DatabasesPage({
             <button
               disabled={isMember}
               onClick={() => setModalOpen(true)}
-              className="px-4 py-2 bg-accent text-bg rounded-lg font-semibold text-xs hover:opacity-90 disabled:opacity-40"
+              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium text-xs disabled:opacity-40 transition-colors"
             >
               Launch Database
             </button>
@@ -190,14 +190,14 @@ export default function DatabasesPage({
       )}
 
       {!dbQuery.isLoading && !dbQuery.error && filtered.length > 0 && (
-        <div className="bg-surface/40 border border-border/50 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-surface/70 border border-border/70 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-xs text-left">
             <thead className="bg-surface-2 text-muted uppercase text-[10px] font-semibold tracking-wider border-b border-border/40">
               <tr>
-                <th className="px-6 py-3.5">Instance</th>
+                <th className="px-6 py-3.5">Database Instance</th>
                 <th className="px-6 py-3.5">Engine</th>
                 <th className="px-6 py-3.5">Status</th>
-                <th className="px-6 py-3.5">Resources</th>
+                <th className="px-6 py-3.5">Hardware Allocation</th>
                 <th className="px-6 py-3.5">Created</th>
                 <th className="px-6 py-3.5 text-right">Actions</th>
               </tr>
@@ -209,24 +209,32 @@ export default function DatabasesPage({
                 const isQdrant = db.engine?.toLowerCase() === "qdrant";
                 
                 const dotColor = isMongo 
-                  ? "bg-[#3FCF6D]" 
+                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" 
                   : isPg 
-                  ? "bg-[#4C8DFF]" 
-                  : "bg-[#FF4D8D]";
+                  ? "bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.5)]" 
+                  : "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.5)]";
+
+                const engineBg = isMongo 
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                  : isPg 
+                  ? "bg-violet-500/10 text-violet-400 border-violet-500/20" 
+                  : "bg-rose-500/10 text-rose-400 border-rose-500/20";
 
                 return (
-                  <tr key={db.id} className="hover:bg-surface-2/40 transition-colors">
+                  <tr key={db.id} className="hover:bg-surface-2/60 transition-colors">
                     <td className="px-6 py-4 font-semibold">
                       <Link
                         href={`/dashboard/projects/${projectId}/databases/${db.id}`}
                         className="hover:underline flex items-center gap-2.5 text-text hover:text-accent transition-colors"
                       >
                         <span className={`w-2.5 h-2.5 rounded-full ${dotColor} shrink-0`}></span>
-                        <span className="text-sm">{db.name}</span>
+                        <span className="text-sm font-bold">{db.name}</span>
                       </Link>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="capitalize font-medium text-text">{db.engine}</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border ${engineBg}`}>
+                        {db.engine}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={db.status} />
@@ -238,10 +246,10 @@ export default function DatabasesPage({
                       {new Date(db.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/dashboard/projects/${projectId}/databases/${db.id}`}
-                          className="px-2.5 py-1.5 rounded-md hover:bg-surface-2 text-accent font-semibold text-xs flex items-center gap-1 transition-colors"
+                          className="px-3 py-1.5 rounded-xl bg-surface-2 hover:bg-surface-2/80 border border-border/70 text-accent font-semibold text-xs flex items-center gap-1.5 transition-colors"
                         >
                           <span>Console</span>
                           <ArrowRight size={12} />
@@ -250,7 +258,7 @@ export default function DatabasesPage({
                           title={isMember ? "Members cannot delete" : "Delete database instance"}
                           disabled={isMember || ["deleting", "provisioning"].includes(db.status) || deleteMut.isPending}
                           onClick={() => setDbToDelete({ id: db.id, name: db.name })}
-                          className="p-1.5 text-muted hover:text-red-400 hover:bg-surface-2 rounded-md transition-colors disabled:opacity-20"
+                          className="p-1.5 text-muted hover:text-red-400 hover:bg-surface-2 rounded-lg transition-colors disabled:opacity-20"
                         >
                           <Trash2 size={14} />
                         </button>

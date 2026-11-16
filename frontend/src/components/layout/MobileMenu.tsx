@@ -14,6 +14,7 @@ import {
 } from "@/data/navigation";
 import Logo from "./Logo";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // A collapsible section (accordion) for Product/Resources
 function Accordion({ label, children }: { label: string; children: React.ReactNode }) {
@@ -170,6 +171,12 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             ))}
           </nav>
 
+          {/* Theme row */}
+          <div className="flex items-center justify-between py-3 border-t border-b border-border/40 my-2">
+            <span className="text-sm font-medium text-foreground">Theme</span>
+            <ThemeToggle variant="segmented" />
+          </div>
+
           {/* ── Bottom CTAs ── */}
           <div style={{ padding: "1.5rem 0", display: "flex", flexDirection: "column", gap: "0.75rem", flexShrink: 0 }}>
             {status === "loading" ? (
@@ -206,7 +213,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 <Link href="/signup" onClick={onClose}
                   style={{
                     textAlign: "center", padding: "0.8rem", borderRadius: 10,
-                    background: "var(--accent)", color: "#05080F",
+                    background: "var(--primary)", color: "#FFFFFF",
                     fontFamily: "var(--font-heading)", fontWeight: 700, textDecoration: "none",
                   }}>
                   Get started

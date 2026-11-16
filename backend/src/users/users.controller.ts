@@ -1,4 +1,13 @@
-import { Controller, Get, Patch, Put, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Put,
+  Delete,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { FirebaseUser } from '../auth/interfaces/firebase-user.interface';
@@ -26,4 +35,11 @@ export class UsersController {
     const user = await this.usersService.updateProfile(firebaseUser.uid, updateDto);
     return this.usersService.toResponse(user);
   }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMe(@CurrentUser() firebaseUser: FirebaseUser): Promise<void> {
+    await this.usersService.deleteAccount(firebaseUser);
+  }
 }
+

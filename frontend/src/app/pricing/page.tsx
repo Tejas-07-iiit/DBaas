@@ -191,7 +191,7 @@ export default function PricingPage() {
                   <p className="text-sm text-muted mb-6 flex-1 min-h-[40px]">{plan.description}</p>
                   <Button 
                     href={(plan as any).href || (plan.id === "enterprise" ? "/contact" : "/signup")}
-                    className={`w-full mb-8 ${plan.buttonVariant === 'primary' ? "bg-accent text-[#05080F] hover:shadow-[0_0_15px_var(--accent)]" : ""}`}
+                    className={`w-full mb-8 ${plan.buttonVariant === 'primary' ? "bg-primary hover:bg-primary-hover text-white shadow-xs" : ""}`}
                     variant={plan.buttonVariant as any}
                   >
                     {plan.buttonText}
@@ -240,10 +240,10 @@ export default function PricingPage() {
                 
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <label className="text-sm font-bold flex items-center gap-2"><Database size={16} className="text-[#4C8DFF]"/> PostgreSQL Storage</label>
+                    <label className="text-sm font-bold flex items-center gap-2"><Database size={16} className="text-[#8B5CF6]"/> PostgreSQL Storage</label>
                     <span className="text-sm font-mono text-accent">{estPg} GB</span>
                   </div>
-                  <input type="range" min="0" max="500" value={estPg} onChange={e => setEstPg(Number(e.target.value))} className="w-full h-1 bg-surface rounded-lg appearance-none cursor-pointer accent-[#4C8DFF]" />
+                  <input type="range" min="0" max="500" value={estPg} onChange={e => setEstPg(Number(e.target.value))} className="w-full h-1 bg-surface rounded-lg appearance-none cursor-pointer accent-[#8B5CF6]" />
                 </div>
 
                 <div>
@@ -281,9 +281,9 @@ export default function PricingPage() {
               </div>
               
               {/* Receipt */}
-              <div className="lg:col-span-2 p-8 bg-[#05080F] flex flex-col relative overflow-hidden">
+              <div className="lg:col-span-2 p-8 bg-surface-elevated/40 border-t lg:border-t-0 lg:border-l border-border flex flex-col relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 blur-[100px] rounded-full pointer-events-none" />
-                <h3 className="text-xl font-bold mb-6 flex justify-between items-center z-10">
+                <h3 className="text-xl font-bold mb-6 flex justify-between items-center z-10 text-text">
                   Estimated Cost
                   <span className="text-xs font-mono bg-surface-2 px-2 py-1 rounded-full text-muted border border-border/50 uppercase tracking-widest">Monthly</span>
                 </h3>
@@ -326,7 +326,7 @@ export default function PricingPage() {
                   {baseTotal > 0 && (
                     <div className="w-full h-2 rounded-full overflow-hidden flex bg-surface-2 mb-6 border border-border/50">
                       <div className="h-full bg-[#3FCF6D] transition-all" style={{ width: `${(mongoCost/baseTotal)*100}%` }} />
-                      <div className="h-full bg-[#4C8DFF] transition-all" style={{ width: `${(pgCost/baseTotal)*100}%` }} />
+                      <div className="h-full bg-[#8B5CF6] transition-all" style={{ width: `${(pgCost/baseTotal)*100}%` }} />
                       <div className="h-full bg-[#FF4D8D] transition-all" style={{ width: `${(qdrantCost/baseTotal)*100}%` }} />
                     </div>
                   )}
@@ -459,7 +459,7 @@ export default function PricingPage() {
               <Button 
                 href={pricingData.closing.primaryHref || "/signup"} 
                 size="lg" 
-                className="bg-accent text-[#05080F] hover:shadow-[0_0_20px_var(--accent)]"
+                className="bg-primary hover:bg-primary-hover text-white font-semibold shadow-xs"
               >
                 {pricingData.closing.primaryCta}
               </Button>

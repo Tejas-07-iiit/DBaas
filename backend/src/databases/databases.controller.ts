@@ -301,4 +301,39 @@ export class DatabasesController {
       query,
     );
   }
+
+  @Get(':databaseId/metrics')
+  async getDatabaseMetrics(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+    @Query('range') range?: string,
+  ) {
+    return this.databasesService.getDatabaseMetrics(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+      range || '1h',
+    );
+  }
+
+  @Get(':databaseId/logs')
+  async getDatabaseLogs(
+    @CurrentUser() firebaseUser: FirebaseUser,
+    @Param(new ZodValidationPipe(databaseDetailParamsSchema))
+    params: DatabaseDetailParamsDto,
+    @Query('search') search?: string,
+    @Query('level') level?: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.databasesService.getDatabaseLogs(
+      firebaseUser,
+      params.projectId,
+      params.databaseId,
+      search,
+      level,
+      limit,
+    );
+  }
 }
+

@@ -23,15 +23,20 @@ export class CentralManagementProvider implements IInfrastructureProvider {
 
   constructor(private readonly configService: ConfigService) {
     this.baseUrl =
+      this.configService.get<string>('MANAGEMENT_API_URL') ||
+      this.configService.get<string>('infrastructure.managementApiUrl') ||
       this.configService.get<string>('CENTRAL_MANAGEMENT_URL') ||
+      this.configService.get<string>('infrastructure.centralManagementUrl') ||
+      process.env.MANAGEMENT_API_URL ||
       process.env.CENTRAL_MANAGEMENT_URL ||
-      'http://10.50.0.2:8443';
+      'http://192.168.122.7:8080';
     this.apiKey =
       this.configService.get<string>('CENTRAL_MANAGEMENT_API_KEY') ||
       process.env.CENTRAL_MANAGEMENT_API_KEY ||
       '';
+    this.logger.log(`CentralManagementProvider initialized with Management API URL: ${this.baseUrl}`);
   }
-
+  
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {

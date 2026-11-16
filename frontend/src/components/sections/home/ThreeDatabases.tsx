@@ -68,7 +68,7 @@ export function MongoDemo() {
                 exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.1 } }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 key={doc.id}
-                className="bg-[#05080F] p-3 rounded-lg border border-border/50 text-muted"
+                className="bg-surface p-3 rounded-lg border border-border/50 text-muted"
               >
                 <span className="text-[#3FCF6D]">{"{"}</span>
                 <span className="ml-4">_id: {doc.id}, name: "{doc.name}", plan: "{doc.plan}"</span>
@@ -135,10 +135,10 @@ export function PostgresDemo() {
 
   return (
     <div className="flex flex-col h-full font-mono text-xs">
-      <div className="bg-[#05080F] p-3 rounded-lg border border-border mb-4 min-h-[44px] flex items-center">
-        <span className="text-[#4C8DFF] mr-2">{"=>"}</span>
+      <div className="bg-surface p-3 rounded-lg border border-border mb-4 min-h-[44px] flex items-center">
+        <span className="text-[#8B5CF6] mr-2">{"=>"}</span>
         <span className="text-text">{sql}</span>
-        {phase === "typing" && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-4 bg-[#4C8DFF] ml-1 inline-block" />}
+        {phase === "typing" && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-4 bg-[#8B5CF6] ml-1 inline-block" />}
       </div>
       
       <div className="flex-1 overflow-hidden">
@@ -153,7 +153,7 @@ export function PostgresDemo() {
                 key={row.id}
                 animate={{ 
                   backgroundColor: isHighlighted ? "rgba(76, 141, 255, 0.15)" : "transparent",
-                  color: isHighlighted ? "#4C8DFF" : "var(--text)"
+                  color: isHighlighted ? "#8B5CF6" : "var(--text)"
                 }}
                 className="grid grid-cols-4 gap-2 px-2 py-1.5 rounded"
               >
@@ -174,7 +174,7 @@ export function PostgresDemo() {
           </button>
         </div>
         <div className="text-muted flex items-center gap-3">
-          {phase === "done" && <span className="text-[#4C8DFF]">3 rows - 4ms</span>}
+          {phase === "done" && <span className="text-[#8B5CF6]">3 rows - 4ms</span>}
           <span className="flex items-center gap-1"><Database size={12} /> PostgreSQL</span>
         </div>
       </div>
@@ -231,7 +231,7 @@ export function QdrantDemo() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 relative bg-[#05080F] rounded-lg border border-border/50 overflow-hidden">
+      <div className="flex-1 relative bg-surface rounded-lg border border-border/50 overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           {/* Lines */}
           {activeIdx !== null && nearest.map((n, i) => (

@@ -6,6 +6,7 @@ import {
   DatabaseStatus,
   DatabaseEventType,
   OperationStatus,
+  DatabaseType,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DatabaseLifecycleService } from '../lifecycle/database-lifecycle.service';
@@ -146,7 +147,7 @@ export class DatabaseLifecycleConsumer extends WorkerHost {
           password: generatedPassword,
         },
         network: {
-          subnet: '10.50.0.0/24',
+          subnet: '192.168.122.0/24',
         },
         tags: {
           databaseName: instance.name,
@@ -180,7 +181,7 @@ export class DatabaseLifecycleConsumer extends WorkerHost {
             vmId: result.vmId,
             internalIp: result.internalIp,
             port: result.port,
-            internalNetwork: '10.50.0.0/24',
+            internalNetwork: '192.168.122.0/24',
             status: DatabaseStatus.RUNNING,
             failureReason: null,
           },
@@ -443,7 +444,64 @@ export class DatabaseLifecycleConsumer extends WorkerHost {
       });
     }
 
-    if (instance.vmId) {
+    const project = instance.projectId
+      ? await this.prisma.project?.findUnique({ where: { id: instance.projectId } })
+      : null;
+
+    const isSharedProjectVm = Boolean(
+      project?.vmId && instance.vmId && project.vmId === instance.vmId,
+    );
+
+    if (isSharedProjectVm) {
+      // In a shared project VM, drop the database and user inside the engine without terminating the project host VM
+      try {
+        const dbName = instance.name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        const cred = await this.prisma.databaseCredential.findFirst({
+          where: { databaseId, isActive: true },
+        });
+
+        if (instance.internalIp) {
+          if (instance.type === DatabaseType.POSTGRESQL) {
+            const { Client } = await import('pg');
+            const client = new Client({
+              host: instance.internalIp,
+              port: instance.port || 5432,
+              user: 'dbaas_admin',
+              password: '5a2191ba39192ca6c408598714ad34ac',
+              database: 'postgres',
+              connectionTimeoutMillis: 3000,
+            });
+            await client.connect();
+            try {
+              await client.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE);`);
+              if (cred?.username) {
+                await client.query(`DROP USER IF EXISTS "${cred.username}";`);
+              }
+            } finally {
+              await client.end().catch(() => {});
+            }
+          } else if (instance.type === DatabaseType.MONGODB) {
+            const { MongoClient } = await import('mongodb');
+            const mongoClient = new MongoClient(
+              `mongodb://dbaas_admin:5a2191ba39192ca6c408598714ad34ac@${instance.internalIp}:${instance.port || 27017}/admin?authSource=admin`,
+              { connectTimeoutMS: 3000, serverSelectionTimeoutMS: 3000 },
+            );
+            await mongoClient.connect();
+            try {
+              await mongoClient.db(dbName).dropDatabase();
+              if (cred?.username) {
+                await mongoClient.db('admin').command({ dropUser: cred.username }).catch(() => {});
+              }
+            } finally {
+              await mongoClient.close().catch(() => {});
+            }
+          }
+        }
+      } catch (dropErr: any) {
+        this.logger.warn(`In-VM drop database note for ${instance.name}: ${dropErr?.message}`);
+      }
+    } else if (instance.vmId) {
+      // Standalone VM - destroy the dedicated KVM domain
       try {
         await this.provider.deleteDatabaseVm(instance.vmId);
       } catch (err: any) {

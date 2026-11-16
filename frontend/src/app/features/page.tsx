@@ -119,7 +119,7 @@ function DemoAutoscaling() {
           />
         ))}
       </div>
-      <div className="flex justify-between items-center bg-[#05080F] p-4 rounded-xl border border-border">
+      <div className="flex justify-between items-center bg-surface p-4 rounded-xl border border-border">
         <div className="flex flex-col">
           <span className="text-xs text-muted uppercase tracking-wider">Replicas</span>
           <span className="text-xl font-bold text-text">{replicas} Nodes</span>
@@ -150,7 +150,7 @@ function DemoMonitoring() {
 
   return (
     <Card className="h-full flex flex-col p-6 bg-surface-2/50 border-border/50 shadow-inner gap-4">
-      <div className="flex gap-2 p-1 bg-[#05080F] rounded-lg border border-border w-fit text-xs mb-2">
+      <div className="flex gap-2 p-1 bg-surface rounded-lg border border-border w-fit text-xs mb-2">
         {["MongoDB", "PostgreSQL", "Qdrant"].map(e => (
           <button 
             key={e} onClick={() => setEngine(e)}
@@ -160,7 +160,7 @@ function DemoMonitoring() {
           </button>
         ))}
       </div>
-      <div className="flex-1 min-h-[120px] bg-[#05080F] border border-border rounded-xl relative overflow-hidden flex items-end">
+      <div className="flex-1 min-h-[120px] bg-surface border border-border rounded-xl relative overflow-hidden flex items-end">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full opacity-70 absolute inset-0">
           <path d={d} fill="none" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
           <path d={`${d} L 100 100 L 0 100 Z`} fill="var(--accent)" fillOpacity="0.1" />
@@ -168,7 +168,7 @@ function DemoMonitoring() {
         <div className="absolute top-4 left-4 text-xs font-mono">QPS: {(points[points.length-1] * 12).toFixed(0)}</div>
         <div className="absolute top-4 right-4 text-xs font-mono text-muted">p95: {(points[points.length-1] * 0.1).toFixed(1)}ms</div>
       </div>
-      <div className="bg-[#05080F] border border-border p-3 rounded-xl">
+      <div className="bg-surface border border-border p-3 rounded-xl">
         <div className="text-xs text-muted mb-2 uppercase tracking-widest">Slow Queries</div>
         <div className="font-mono text-xs text-text truncate opacity-80">{engine === "MongoDB" ? 'db.users.find({ status: "active" })' : engine === "PostgreSQL" ? 'SELECT * FROM users JOIN orders...' : 'client.search(collection="docs"...'} <span className="text-red-400 float-right">402ms</span></div>
       </div>
@@ -224,7 +224,7 @@ function DemoSecurity() {
         <div className="flex flex-wrap gap-2 mb-3">
           <AnimatePresence>
             {ips.map(ip => (
-              <motion.div key={ip} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#05080F] border border-border px-2 py-1 rounded text-xs font-mono flex items-center gap-2 text-text">
+              <motion.div key={ip} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="bg-surface border border-border px-2 py-1 rounded text-xs font-mono flex items-center gap-2 text-text">
                 {ip}
                 <button onClick={() => setIps(ips.filter(i => i !== ip))} className="text-muted hover:text-red-400">&times;</button>
               </motion.div>
@@ -232,7 +232,7 @@ function DemoSecurity() {
           </AnimatePresence>
         </div>
         <form onSubmit={handleAdd} className="flex gap-2">
-          <input value={ip} onChange={e => setIp(e.target.value)} placeholder="0.0.0.0/0" className="flex-1 bg-[#05080F] border border-border rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent font-mono" />
+          <input value={ip} onChange={e => setIp(e.target.value)} placeholder="0.0.0.0/0" className="flex-1 bg-surface border border-border rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent font-mono" />
           <Button type="submit" className="py-1.5 px-3 h-auto bg-surface border border-border text-text hover:bg-surface-2 text-sm">Add</Button>
         </form>
       </div>
@@ -258,7 +258,7 @@ function DemoCli() {
   return (
     <Card className="h-full flex flex-col p-0 overflow-hidden bg-surface-2/50 border-border/50 shadow-inner">
       <div className="flex-1 flex flex-col">
-        <div className="bg-[#05080F] p-4 flex-1 border-b border-border/50 font-mono text-sm flex flex-col justify-center">
+        <div className="bg-surface p-4 flex-1 border-b border-border/50 font-mono text-sm flex flex-col justify-center">
           <div className="text-muted mb-2">$ {cmds[cmdIdx]}</div>
           <div className="text-accent flex items-center gap-2"><Loader2 size={12} className="animate-spin" /> Processing...</div>
         </div>
@@ -284,7 +284,7 @@ function DemoRegions() {
   return (
     <Card className="h-full flex flex-col p-6 bg-surface-2/50 border-border/50 shadow-inner relative overflow-hidden">
       <div className="text-center font-bold mb-6 relative z-10">Select a region</div>
-      <div className="flex-1 relative w-full rounded-xl bg-[#05080F] border border-border flex items-center justify-center min-h-[250px]">
+      <div className="flex-1 relative w-full rounded-xl bg-surface border border-border flex items-center justify-center min-h-[250px]">
         {/* Fake World Map SVG */}
         <svg viewBox="0 0 100 100" className="w-full h-full opacity-20 pointer-events-none absolute inset-0">
           <path d="M 20 40 Q 30 20 40 40 T 60 30 T 80 50" stroke="var(--text)" strokeWidth="0.5" fill="none" />
@@ -304,7 +304,7 @@ function DemoRegions() {
             style={{ left: `${r.x}%`, top: `${r.y}%` }}
           >
             <div className={`w-3 h-3 rounded-full transition-colors ${active === i ? "bg-accent shadow-[0_0_10px_var(--accent)]" : "bg-border hover:bg-muted"}`} />
-            <div className={`absolute top-4 whitespace-nowrap text-[10px] font-mono px-2 py-1 rounded border bg-[#05080F] transition-opacity ${active === i ? "opacity-100 border-accent text-accent z-20" : "opacity-0 border-border text-muted z-10"}`}>
+            <div className={`absolute top-4 whitespace-nowrap text-[10px] font-mono px-2 py-1 rounded border bg-surface transition-opacity ${active === i ? "opacity-100 border-accent text-accent z-20" : "opacity-0 border-border text-muted z-10"}`}>
               {r.name} - {r.lat}
             </div>
           </button>
@@ -342,7 +342,7 @@ function DemoTeams() {
       <div className="space-y-2">
         <AnimatePresence>
           {members.map(m => (
-            <motion.div key={m.email} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center bg-[#05080F] p-3 rounded-lg border border-border text-sm">
+            <motion.div key={m.email} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center bg-surface p-3 rounded-lg border border-border text-sm">
               <span className="text-text truncate pr-4">{m.email}</span>
               <select className="bg-surface border border-border rounded p-1 text-xs text-muted outline-none focus:border-accent font-mono" defaultValue={m.role}>
                 <option>Owner</option>
@@ -355,7 +355,7 @@ function DemoTeams() {
         </AnimatePresence>
       </div>
       <form onSubmit={handleInvite} className="flex gap-2 mt-auto">
-        <input type="email" value={invite} onChange={e => setInvite(e.target.value)} placeholder="Email address" className="flex-1 bg-[#05080F] border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-accent" required />
+        <input type="email" value={invite} onChange={e => setInvite(e.target.value)} placeholder="Email address" className="flex-1 bg-surface border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-accent" required />
         <Button type="submit" className="py-2 px-4 h-auto bg-text text-bg hover:bg-muted text-sm shrink-0">Invite</Button>
       </form>
     </Card>
@@ -521,7 +521,7 @@ export default function FeaturesPage() {
         <Container>
           <SectionHeader title={featuresData.vsSelfHosted.title} subtitle={featuresData.vsSelfHosted.description} className="text-center mb-16" />
           
-          <Card className="max-w-4xl mx-auto p-8 lg:p-12 bg-[#05080F] border-border/50">
+          <Card className="max-w-4xl mx-auto p-8 lg:p-12 bg-surface border-border/50">
             <div className="flex flex-col md:flex-row gap-12 items-center">
               <div className="w-full md:w-1/3 flex flex-col gap-6">
                 <div className="text-sm font-bold">Databases: {dbCount}</div>

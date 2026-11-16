@@ -178,7 +178,7 @@ export const articles: DocArticle[] = [
     ],
     blocks: [
       { type: "heading", id: "billing", level: 2, content: "Billing Details" },
-      { type: "paragraph", content: "Plans come from the pricing page. Before a database is created the platform checks your subscription and the resources your plan allows. Checkout is handled by Stripe. Subscriptions can be cancelled from the dashboard. Billing is managed by project Owners." }
+      { type: "paragraph", content: "Plans come from the pricing page. Before a database is created the platform checks your subscription and the resources your plan allows. Checkout is handled by Razorpay Subscriptions. Subscriptions can be cancelled from the dashboard. Billing is managed by project Owners." }
     ]
   }
   ,
@@ -317,7 +317,7 @@ export const docsLandingData = {
     },
     {
       engine: "PostgreSQL",
-      color: "#4C8DFF",
+      color: "#8B5CF6",
       links: [
         { title: "Connect to PostgreSQL", slug: "connect-to-postgresql" },
         { title: "Connection Pooling with PgBouncer", slug: "connect-to-postgresql" },

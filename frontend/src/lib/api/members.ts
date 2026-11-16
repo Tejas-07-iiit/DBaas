@@ -21,7 +21,11 @@ export async function listMembers(projectId: string) {
  * @param data - Member details including email and role ('Owner' | 'Admin' | 'Member')
  */
 export async function addMember(projectId: string, data: any) {
-  return apiClient(endpoints.members.add, { body: JSON.stringify(data) }, { projectId });
+  const payload = {
+    ...data,
+    role: data?.role ? String(data.role).toUpperCase() : undefined,
+  };
+  return apiClient(endpoints.members.add, { body: JSON.stringify(payload) }, { projectId });
 }
 
 /**
@@ -31,7 +35,8 @@ export async function addMember(projectId: string, data: any) {
  * @param role - New assigned role ('Admin' | 'Member')
  */
 export async function updateMemberRole(projectId: string, memberId: string, role: string) {
-  return apiClient(endpoints.members.updateRole, { body: JSON.stringify({ role }) }, { projectId, userId: memberId, memberId });
+  const payload = { role: String(role).toUpperCase() };
+  return apiClient(endpoints.members.updateRole, { body: JSON.stringify(payload) }, { projectId, userId: memberId, memberId });
 }
 
 /**

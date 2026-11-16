@@ -1,6 +1,6 @@
 "use client";
 // Logo.tsx
-// The DBaaS logo: three rounded blocks (Mongo green, Postgres blue, Qdrant pink)
+// The DBaaS logo: three rounded blocks (Mongo green, Postgres violet, Qdrant pink)
 // stacked and slightly overlapping to show "three databases in one".
 // On hover the blocks shift apart slightly.
 
@@ -27,10 +27,10 @@ export default function Logo() {
           variants={{ hovered: { y: -3, x: 0 } }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         />
-        {/* Block 2 — PostgreSQL blue (middle) */}
+        {/* Block 2 — PostgreSQL violet (middle) */}
         <motion.div
           className="absolute rounded-md"
-          style={{ width: 26, height: 11, background: "#4C8DFF", top: 12, left: 3 }}
+          style={{ width: 26, height: 11, background: "#8B5CF6", top: 12, left: 3 }}
           variants={{ hovered: { x: -3 } }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         />

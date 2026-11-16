@@ -87,7 +87,14 @@ export function mapProject(data: any) {
     name: data?.name || '',
     description: data?.description || '',
     createdAt: data?.createdAt || data?.created_at || new Date().toISOString(),
-    role
+    role,
+    status: (data?.status || 'RUNNING').toUpperCase(),
+    vmId: data?.vmId || data?.vm_id || null,
+    internalIp: data?.internalIp || data?.internal_ip || null,
+    cpuCores: data?.cpuCores || data?.cpu_cores || 2,
+    ramMb: data?.ramMb || data?.ram_mb || 4096,
+    storageMb: data?.storageMb || data?.storage_mb || 20480,
+    failureReason: data?.failureReason || data?.failure_reason || null,
   };
 }
 
@@ -96,10 +103,25 @@ export function mapProject(data: any) {
 // 1. What does the subscription object look like? Does it have planName, status, renewalDate?
 export function mapSubscription(data: any) {
   return {
-    planName: data?.planName || data?.plan?.name || 'Free Plan',
+    id: data?.id,
+    projectId: data?.projectId,
+    planId: data?.planId,
+    planName: data?.planName || data?.plan?.name || 'Developer Sandbox (Free)',
+    tier: data?.tier || 'FREE',
+    interval: data?.interval || 'monthly',
     status: data?.status || 'active',
     renewalDate: data?.renewalDate || data?.current_period_end || null,
-    limits: data?.limits || {}
+    nextBillingDate: data?.nextBillingDate || null,
+    cancelAtPeriodEnd: !!data?.cancelAtPeriodEnd,
+    isOwner: data?.isOwner !== false,
+    paymentEnabled: data?.paymentEnabled !== false,
+    limits: data?.limits || {},
+    usage: data?.usage || {
+      databaseCount: 0,
+      cpuUsed: 0,
+      ramUsedMb: 0,
+      storageUsedMb: 0,
+    },
   };
 }
 

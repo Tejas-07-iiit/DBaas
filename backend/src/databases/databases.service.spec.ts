@@ -9,7 +9,13 @@ import { DatabaseEnginesService } from '../database-engines/database-engines.ser
 import { DatabaseLifecycleService } from './lifecycle/database-lifecycle.service';
 import { DatabaseQuotaService } from './quotas/database-quota.service';
 import { ProjectAuthorizationService } from '../projects/project-authorization.service';
-import { DatabaseType, DatabaseStatus, ProjectRole, DatabaseEventType } from '@prisma/client';
+import {
+  DatabaseType,
+  DatabaseStatus,
+  ProjectRole,
+  ProjectStatus,
+  DatabaseEventType,
+} from '@prisma/client';
 
 describe('DatabasesService', () => {
   let service: DatabasesService;
@@ -89,6 +95,9 @@ describe('DatabasesService', () => {
       },
       subscription: {
         findUnique: jest.fn(),
+      },
+      project: {
+        findUnique: jest.fn().mockResolvedValue(null),
       },
       $transaction: jest.fn((cb) => cb(prisma)),
     };
@@ -215,6 +224,124 @@ describe('DatabasesService', () => {
           },
         ),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should provision database instantly when parent project VM is RUNNING', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.project.findUnique.mockResolvedValue({
+        id: mockProject.id,
+        name: 'Main Project',
+        status: ProjectStatus.RUNNING,
+        vmId: 'vm-proj-1234',
+        internalIp: '192.168.122.50',
+      });
+
+      prisma.databaseInstance.findFirst.mockResolvedValue(null);
+      const instantDb = {
+        ...mockDatabase,
+        status: DatabaseStatus.RUNNING,
+        internalIp: '192.168.122.50',
+        vmId: 'vm-proj-1234',
+        port: 5432,
+      };
+      prisma.databaseInstance.create.mockResolvedValue(instantDb);
+      prisma.databaseCredential.create.mockResolvedValue({ id: 'cred-1' });
+      prisma.databaseEvent.create.mockResolvedValue({ id: 'evt-1' });
+      prisma.databaseOperation.create.mockResolvedValue({ id: 'op-instant', status: 'COMPLETED' });
+
+      const result = await service.createDatabase(
+        { uid: mockUser.firebaseUid, email: mockUser.email },
+        mockProject.id,
+        {
+          name: 'instant-db',
+          type: DatabaseType.POSTGRESQL,
+          version: '16',
+          cpuCores: 1,
+          ramMb: 1024,
+          storageMb: 5120,
+        },
+      );
+
+      expect(result.status).toBe(DatabaseStatus.RUNNING);
+      expect(result.internalIp).toBe('192.168.122.50');
+      expect(result.isOperational).toBe(true);
+      // In-VM creation should NOT enqueue a multi-minute provision-database VM job
+      expect(mockQueue.add).not.toHaveBeenCalledWith(
+        'provision-database',
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
+    it('should reject creation if parent project VM is still PROVISIONING', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.project.findUnique.mockResolvedValue({
+        id: mockProject.id,
+        name: 'Main Project',
+        status: ProjectStatus.PROVISIONING,
+      });
+
+      prisma.databaseInstance.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createDatabase(
+          { uid: mockUser.firebaseUid, email: mockUser.email },
+          mockProject.id,
+          {
+            name: 'wait-db',
+            type: DatabaseType.POSTGRESQL,
+            cpuCores: 1,
+            ramMb: 1024,
+            storageMb: 5120,
+          },
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject creation if parent project VM is STOPPED', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId: mockProject.id,
+        userId: mockUser.id,
+        role: ProjectRole.OWNER,
+        project: mockProject,
+      });
+
+      prisma.project.findUnique.mockResolvedValue({
+        id: mockProject.id,
+        name: 'Main Project',
+        status: ProjectStatus.STOPPED,
+      });
+
+      prisma.databaseInstance.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createDatabase(
+          { uid: mockUser.firebaseUid, email: mockUser.email },
+          mockProject.id,
+          {
+            name: 'stopped-vm-db',
+            type: DatabaseType.POSTGRESQL,
+            cpuCores: 1,
+            ramMb: 1024,
+            storageMb: 5120,
+          },
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

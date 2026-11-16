@@ -19,8 +19,21 @@ services:
       - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
       - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
       - INFRASTRUCTURE_PROVIDER=${INFRASTRUCTURE_PROVIDER:-central-management}
-      - CENTRAL_MANAGEMENT_URL=${CENTRAL_MANAGEMENT_URL:-http://10.50.0.7:8080}
+      - MANAGEMENT_API_URL=${MANAGEMENT_API_URL:-http://192.168.122.7:8080}
+      - CENTRAL_MANAGEMENT_URL=${CENTRAL_MANAGEMENT_URL:-http://192.168.122.7:8080}
       - CENTRAL_MANAGEMENT_API_KEY=${CENTRAL_MANAGEMENT_API_KEY}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-DBaaS Cloud <no-reply@dbaas.local>}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-rzp_test_mock_key_id}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-rzp_test_mock_key_secret}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-rzp_test_webhook_secret}
+      - RAZORPAY_MODE=${RAZORPAY_MODE:-test}
+      - PAYMENT_ENABLED=${PAYMENT_ENABLED:-true}
     command: >
       sh -c "npx prisma migrate deploy && node dist/main"
     depends_on:

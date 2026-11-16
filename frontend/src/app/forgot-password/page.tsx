@@ -10,11 +10,13 @@ import { GuestOnly } from "@/lib/auth/GuestOnly";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/errors";
-import { authApi } from "@/lib/api/auth";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth/authErrors";
 
 type ForgotForm = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
+  const { sendPasswordReset } = useAuth();
   const [globalError, setGlobalError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -36,14 +38,14 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setGlobalError("");
     try {
-      await authApi.forgotPassword(data);
+      await sendPasswordReset(data.email);
       setSuccess(true);
       setCooldown(30);
     } catch (err: any) {
       if (err instanceof ApiError) {
         setGlobalError(err.message);
       } else {
-        setGlobalError("An unexpected error occurred");
+        setGlobalError(getFriendlyAuthErrorMessage(err));
       }
     } finally {
       setLoading(false);

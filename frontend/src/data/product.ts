@@ -24,7 +24,7 @@ export const productData = {
     {
       id: "postgres",
       name: "PostgreSQL",
-      color: "#4C8DFF",
+      color: "#8B5CF6",
       purpose: "Relational database for structured tabular data",
       linkText: "Explore PostgreSQL",
       href: "/product/postgresql"
@@ -42,7 +42,7 @@ export const productData = {
     title: "Same platform. Different strengths.",
     categories: ["Show all", "Developer experience", "Scale", "AI"],
     columns: [
-      { id: "postgres", name: "PostgreSQL", color: "#4C8DFF" },
+      { id: "postgres", name: "PostgreSQL", color: "#8B5CF6" },
       { id: "mongodb", name: "MongoDB", color: "#3FCF6D" },
       { id: "qdrant", name: "Qdrant", color: "#FF4D8D" }
     ],

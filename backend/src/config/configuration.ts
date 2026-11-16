@@ -20,8 +20,24 @@ export default () => {
     infrastructure: {
       provider: env.INFRASTRUCTURE_PROVIDER,
       encryptionKey: env.ENCRYPTION_KEY,
-      centralManagementUrl: env.CENTRAL_MANAGEMENT_URL,
+      managementApiUrl: env.MANAGEMENT_API_URL || env.CENTRAL_MANAGEMENT_URL,
+      centralManagementUrl: env.MANAGEMENT_API_URL || env.CENTRAL_MANAGEMENT_URL,
       centralManagementApiKey: env.CENTRAL_MANAGEMENT_API_KEY,
     },
+    email: {
+      smtpHost: env.SMTP_HOST,
+      smtpPort: env.SMTP_PORT,
+      smtpUser: env.SMTP_USER,
+      smtpPass: env.SMTP_PASS,
+      smtpFrom: env.SMTP_FROM,
+      frontendUrl: env.FRONTEND_URL,
+    },
+    razorpay: {
+      keyId: env.RAZORPAY_KEY_ID,
+      keySecret: env.RAZORPAY_KEY_SECRET,
+      webhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
+      mode: env.RAZORPAY_MODE,
+    },
+    paymentEnabled: env.PAYMENT_ENABLED,
   };
 };

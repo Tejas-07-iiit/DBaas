@@ -21,6 +21,7 @@ export const tokenStorage = {
     try {
       localStorage.setItem('dbaas_access', access);
       if (refresh) localStorage.setItem('dbaas_refresh', refresh);
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('dbaas_auth_change'));
     } catch {}
   },
   
@@ -40,6 +41,7 @@ export const tokenStorage = {
       localStorage.removeItem('dbaas_access');
       localStorage.removeItem('dbaas_refresh');
       localStorage.removeItem('dbaas_token_source');
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('dbaas_auth_change'));
     } catch {}
   }
 };

@@ -22,7 +22,7 @@ function CodeBlock({ language, code, filename }: { language: string; code: strin
   };
 
   return (
-    <div className="my-6 bg-[#05080F] rounded-xl border border-border overflow-hidden">
+    <div className="my-6 bg-[#101513] rounded-xl border border-border overflow-hidden">
       {(filename || language) && (
         <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-surface/50">
           <div className="text-xs font-mono text-muted">{filename || language}</div>
@@ -50,7 +50,7 @@ function CodeBlock({ language, code, filename }: { language: string; code: strin
 
 function Callout({ variant, content }: { variant: "note" | "tip" | "warning"; content: string }) {
   const config = {
-    note: { icon: Info, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
+    note: { icon: Info, color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/30" },
     tip: { icon: Lightbulb, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/30" },
     warning: { icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/30" }
   };

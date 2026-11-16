@@ -34,7 +34,7 @@ const CODE_TABS = [
 
 // Custom syntax theme using the brand palette
 const customTheme = {
-  plain: { color: "var(--text)", backgroundColor: "#05080F" },
+  plain: { color: "var(--text)", backgroundColor: "var(--surface)" },
   styles: [
     { types: ["comment", "prolog", "doctype", "cdata"], style: { color: "var(--muted)", fontStyle: "italic" as const } },
     { types: ["namespace"], style: { opacity: 0.7 } },
@@ -42,7 +42,7 @@ const customTheme = {
     { types: ["punctuation", "operator"], style: { color: "var(--muted)" } },
     { types: ["entity", "url", "symbol", "number", "boolean", "variable", "constant", "property", "regex", "inserted"], style: { color: "#FF4D8D" } },
     { types: ["atrule", "keyword", "attr-name", "selector"], style: { color: "var(--accent)" } },
-    { types: ["function", "deleted", "tag"], style: { color: "#4C8DFF" } },
+    { types: ["function", "deleted", "tag"], style: { color: "#8B5CF6" } },
     { types: ["function-variable"], style: { color: "#FFB224" } },
     { types: ["tag", "selector", "keyword"], style: { color: "var(--accent)" } }
   ]
@@ -93,7 +93,7 @@ export default function CodeTabs() {
           </div>
 
           <div>
-            <Card className="p-0 overflow-hidden bg-[#05080F] shadow-2xl">
+            <Card className="p-0 overflow-hidden bg-surface shadow-2xl">
               <div className="flex justify-between items-center bg-surface-2/80 border-b border-border px-4 pt-4">
                 <div className="flex gap-4 relative">
                   {CODE_TABS.map((t, i) => (

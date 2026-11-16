@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { DatabaseQuotaService } from './database-quota.service';
-import { DatabaseType, SubscriptionTier } from '@prisma/client';
+import { DatabaseType, SubscriptionTier, SubscriptionStatus } from '@prisma/client';
 
 describe('DatabaseQuotaService', () => {
   let service: DatabaseQuotaService;
@@ -126,6 +126,60 @@ describe('DatabaseQuotaService', () => {
           storageMb: 5120,
         }),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should permit provisioning during payment grace period', async () => {
+      const mockTx = {
+        subscription: {
+          findUnique: jest.fn().mockResolvedValue({
+            tier: SubscriptionTier.BASIC,
+            status: SubscriptionStatus.PAST_DUE,
+            currentPeriodEnd: new Date(Date.now() - 2 * 86400000), // 2 days ago (within 7-day grace)
+          }),
+        },
+        databaseInstance: {
+          count: jest.fn().mockResolvedValue(0),
+          aggregate: jest.fn().mockResolvedValue({
+            _sum: { cpuCores: 0, ramMb: 0, storageMb: 0 },
+          }),
+        },
+      };
+
+      await expect(
+        service.validateQuotaWithinTransaction(mockTx, 'project-1', {
+          type: DatabaseType.POSTGRESQL,
+          cpuCores: 1,
+          ramMb: 1024,
+          storageMb: 5120,
+        }),
+      ).resolves.not.toThrow();
+    });
+
+    it('should reject provisioning after payment grace period expires', async () => {
+      const mockTx = {
+        subscription: {
+          findUnique: jest.fn().mockResolvedValue({
+            tier: SubscriptionTier.BASIC,
+            status: SubscriptionStatus.PAST_DUE,
+            currentPeriodEnd: new Date(Date.now() - 10 * 86400000), // 10 days ago (past 7-day grace)
+          }),
+        },
+        databaseInstance: {
+          count: jest.fn().mockResolvedValue(0),
+          aggregate: jest.fn().mockResolvedValue({
+            _sum: { cpuCores: 0, ramMb: 0, storageMb: 0 },
+          }),
+        },
+      };
+
+      await expect(
+        service.validateQuotaWithinTransaction(mockTx, 'project-1', {
+          type: DatabaseType.POSTGRESQL,
+          cpuCores: 1,
+          ramMb: 1024,
+          storageMb: 5120,
+        }),
+      ).rejects.toThrow(/grace period has elapsed/);
     });
   });
 });

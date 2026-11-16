@@ -3,7 +3,7 @@ import { ProjectsService } from './projects.service';
 import { ProjectAuthorizationService } from './project-authorization.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole, ProjectStatus } from '@prisma/client';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -29,6 +29,13 @@ describe('ProjectsService', () => {
     id: '22222222-2222-2222-2222-222222222222',
     name: 'Production Cloud',
     description: 'Main production environment',
+    status: ProjectStatus.PROVISIONING,
+    vmId: null,
+    internalIp: null,
+    cpuCores: 2,
+    ramMb: 4096,
+    storageMb: 20480,
+    failureReason: null,
     ownerId: mockUser.id,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -84,6 +91,10 @@ describe('ProjectsService', () => {
           name: 'Production Cloud',
           description: 'Main production environment',
           ownerId: mockUser.id,
+          status: ProjectStatus.PROVISIONING,
+          cpuCores: 2,
+          ramMb: 4096,
+          storageMb: 20480,
         },
       });
       expect(prisma.projectMember.create).toHaveBeenCalledWith({

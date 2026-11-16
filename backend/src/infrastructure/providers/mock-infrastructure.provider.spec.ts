@@ -29,13 +29,13 @@ describe('MockInfrastructureProvider', () => {
     provider.reset();
   });
 
-  it('should provision a VM successfully and assign an IP in the 10.50.0.x subnet', async () => {
+  it('should provision a VM successfully and assign an IP in the 192.168.122.x subnet', async () => {
     const result = await provider.provisionDatabaseVm(mockRequest);
 
     expect(result).toBeDefined();
     expect(result.status).toBe('RUNNING');
     expect(result.vmId).toContain('vm-post-');
-    expect(result.internalIp).toMatch(/^10\.50\.0\.\d+$/);
+    expect(result.internalIp).toMatch(/^192\.168\.122\.\d+$/);
     expect(result.port).toBe(5432);
     expect(result.metadata?.isMock).toBe(true);
   });

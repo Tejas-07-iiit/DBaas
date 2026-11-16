@@ -52,7 +52,7 @@ export default function Hero() {
           <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 mb-10">
             <Link 
               href="/signup" 
-              className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 bg-accent text-[#05080F] hover:shadow-[0_0_20px_rgba(25,227,193,0.3)] px-8 py-4 text-base cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+              className="inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200 bg-primary hover:bg-primary-hover text-white shadow-xs hover:shadow-md px-8 py-4 text-base cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg"
             >
               {homeData.hero.primaryCTA}
             </Link>
@@ -68,7 +68,7 @@ export default function Hero() {
           <motion.div variants={fadeIn} className="flex flex-wrap gap-3 justify-center relative z-10 pointer-events-auto">
             {[
               { name: "MongoDB", color: "#3FCF6D" },
-              { name: "PostgreSQL", color: "#4C8DFF" },
+              { name: "PostgreSQL", color: "#8B5CF6" },
               { name: "Qdrant", color: "#FF4D8D" }
             ].map((chip) => (
               <div
