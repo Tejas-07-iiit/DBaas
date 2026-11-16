@@ -21,24 +21,64 @@ export class UsersService {
    * Creates the Platform PostgreSQL user record if it doesn't exist yet.
    */
   async findOrCreateFromFirebase(firebaseUser: FirebaseUser): Promise<User> {
-    const existing = await this.prisma.user.findUnique({
+    // 1. Try finding by firebaseUid first
+    let user = await this.prisma.user.findUnique({
       where: { firebaseUid: firebaseUser.uid },
     });
 
-    if (existing) {
-      return existing;
+    if (user) {
+      return user;
     }
 
-    this.logger.log(`Creating new platform user for Firebase UID: ${firebaseUser.uid}`);
+    // 2. Try finding by email (in case user was invited, pre-created, or UID was reset)
+    if (firebaseUser.email) {
+      user = await this.prisma.user.findUnique({
+        where: { email: firebaseUser.email },
+      });
 
-    return this.prisma.user.create({
-      data: {
-        firebaseUid: firebaseUser.uid,
-        email: firebaseUser.email,
-        name: firebaseUser.name || null,
-        avatarUrl: firebaseUser.picture || null,
-      },
-    });
+      if (user) {
+        this.logger.log(
+          `Linking Firebase UID ${firebaseUser.uid} to existing user with email ${firebaseUser.email}`,
+        );
+        return this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            firebaseUid: firebaseUser.uid,
+            name: user.name || firebaseUser.name || null,
+            avatarUrl: user.avatarUrl || firebaseUser.picture || null,
+          },
+        });
+      }
+    }
+
+    // 3. Create new user safely, handling concurrency race conditions
+    try {
+      this.logger.log(`Creating new platform user for Firebase UID: ${firebaseUser.uid}`);
+      return await this.prisma.user.create({
+        data: {
+          firebaseUid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: firebaseUser.name || null,
+          avatarUrl: firebaseUser.picture || null,
+        },
+      });
+    } catch (err: any) {
+      // If a concurrent request already created the user, retrieve and return it
+      const fallback = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { firebaseUid: firebaseUser.uid },
+            ...(firebaseUser.email ? [{ email: firebaseUser.email }] : []),
+          ],
+        },
+      });
+
+      if (fallback) {
+        return fallback;
+      }
+
+      throw err;
+    }
   }
 
   /**
